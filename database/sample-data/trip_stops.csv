@@ -1,0 +1,5 @@
+TripNumber,StopSequence,StopTypeCode,StopStatusCode,LocationCode,ScheduledArrivalUtc,ScheduledDepartureUtc,Instructions
+TRIP-2026-0101,1,PICKUP,PLANNED,LOC-TUS-CSR-01,2026-09-08T15:00:00Z,2026-09-08T15:30:00Z,Check in at receiving office
+TRIP-2026-0101,2,DELIVERY,PLANNED,LOC-PHX-ACS-01,2026-09-08T19:00:00Z,2026-09-08T19:30:00Z,Use designated receiving dock
+TRIP-2026-0102,1,PICKUP,PLANNED,LOC-PHX-ACS-01,2026-09-09T14:00:00Z,2026-09-09T14:30:00Z,Verify seal before departure
+TRIP-2026-0102,2,DELIVERY,PLANNED,LOC-FLG-GCO-01,2026-09-09T18:30:00Z,2026-09-09T19:00:00Z,Contact receiving fifteen minutes before arrival

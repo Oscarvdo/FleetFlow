@@ -1,0 +1,4 @@
+CustomerNumber,CompanyName,ContactName,Email,Phone,IsActive
+CUS-2001,Copper State Retail Distribution,Ana Torres,ana.torres@example.test,520-555-1101,true
+CUS-2002,Arizona Clinical Supply,Marcus Lee,marcus.lee@example.test,602-555-1102,true
+CUS-2003,Grand Canyon Office Products,Sofia Martinez,sofia.martinez@example.test,928-555-1103,true

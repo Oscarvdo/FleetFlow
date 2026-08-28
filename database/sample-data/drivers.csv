@@ -1,0 +1,4 @@
+DriverNumber,FirstName,LastName,Phone,Email,LicenseNumber,LicenseState,LicenseExpirationDate,DriverStatusCode,IsActive
+DRV-201,Isabel,Ramirez,520-555-1201,isabel.ramirez@example.test,AZCDL200001,AZ,2029-03-31,AVAILABLE,true
+DRV-202,Noah,Wilson,602-555-1202,noah.wilson@example.test,AZCDL200002,AZ,2028-10-31,AVAILABLE,true
+DRV-203,Emilio,Garcia,928-555-1203,emilio.garcia@example.test,AZCDL200003,AZ,2029-06-30,OFF_DUTY,true
