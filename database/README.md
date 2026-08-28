@@ -22,6 +22,9 @@ Included now:
 - CSV import batches with row-level validation errors;
 - reproducible simulation runs and ordered route points;
 - application users, roles, permissions, and security auditing.
+- a stored-procedure-first database API with domain schemas and read views;
+- table-valued parameters for batched telemetry, routes, stops, and CSV errors;
+- controlled trip-status transitions, current vehicle state, and immutable audit trails.
 
 Deferred until the core workflow is working:
 
@@ -82,7 +85,14 @@ Run the scripts in SQL Server Management Studio or Azure Data Studio:
 1. `001_create_database.sql`
 2. `002_seed_reference_and_demo_data.sql`
 3. `004_create_application_security.sql`
-4. `003_validation_queries.sql`
+4. `005_create_database_api_schemas.sql`
+5. `006_create_table_types_and_functions.sql`
+6. `007_create_views.sql`
+7. `008_create_stored_procedures.sql`
+8. `009_create_protection_triggers_and_roles.sql`
+9. `010_seed_workflow_rules.sql`
+10. `003_validation_queries.sql`
+11. `011_database_api_validation.sql`
 
 The seed creates a Tucson-to-Phoenix demonstration trip, two drivers, two
 trucks, two trailers, and two fictional customers. All email addresses use the
@@ -94,6 +104,10 @@ with seed `20260828`, time scale `10x`, and a two-second update interval.
 The security script creates roles and their permissions but intentionally does
 not create a user with a fabricated password. The first administrator will be
 created from C# using the .NET password hasher.
+
+`DATABASE_API.md` documents the stored-procedure-first contract used by the
+.NET applications. SQL triggers are deliberately limited to protecting
+append-only history and audit records.
 
 ## CSV demonstration files
 

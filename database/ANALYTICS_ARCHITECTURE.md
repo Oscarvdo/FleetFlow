@@ -25,6 +25,7 @@ separate star-schema Data Mart populated incrementally.
 | `VehicleTelemetry` | route, speed, fuel, distance, and communication quality |
 | `SimulationRuns` | scenario, seed, speed, and synthetic-data segmentation |
 | `ImportBatches` | CSV lineage, quality, rejection, and completeness metrics |
+| `VehicleCurrentState` | operational latest-position projection; not a historical analytical source |
 
 ## Planned Data Mart
 
@@ -94,6 +95,8 @@ separately from observed outcomes so model output is never confused with fact.
   relational columns used by the application.
 - Telemetry retention, aggregation, partitioning, and columnstore indexes will
   be added after actual volume is measured; they are not required for the MVP.
+- `VehicleCurrentState` accelerates the operational map, but analytical loads
+  always read immutable `VehicleTelemetry` observations rather than the latest-state projection.
 
 ## .NET implementation direction
 

@@ -54,6 +54,12 @@ The following fields are deliberate and are not accidental duplication:
   time-series measurements.
 - Human-readable numbers such as `TripNumber` and `UnitNumber` are alternate
   business keys; identity columns remain the relational keys.
+- `VehicleCurrentState` is an intentional one-row-per-vehicle projection used
+  to render the live map without scanning the telemetry history. The batched
+  telemetry procedure updates it transactionally; `VehicleTelemetry` remains
+  the authoritative time-series history.
+- `TripStatusTransitions` represents workflow policy as data rather than
+  duplicating allowed transitions in WinForms, the API, and MAUI.
 
 ## Historical location snapshots
 
