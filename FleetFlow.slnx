@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/database/">
+    <File Path="../../../Videos/database/001_create_database.sql" />
+    <File Path="../../../Videos/database/002_seed_reference_and_demo_data.sql" />
+    <File Path="../../../Videos/database/003_validation_queries.sql" />
+    <File Path="../../../Videos/database/004_create_application_security.sql" />
+    <File Path="../../../Videos/database/ANALYTICS_ARCHITECTURE.md" />
+    <File Path="../../../Videos/database/CSV_CONTRACTS.md" />
+    <File Path="../../../Videos/database/NORMALIZATION.md" />
+    <File Path="../../../Videos/database/README.md" />
+  </Folder>
+  <Folder Name="/database/sample-data/">
+    <File Path="../../../Videos/database/sample-data/customers.csv" />
+    <File Path="../../../Videos/database/sample-data/drivers.csv" />
+    <File Path="../../../Videos/database/sample-data/loads.csv" />
+    <File Path="../../../Videos/database/sample-data/locations.csv" />
+    <File Path="../../../Videos/database/sample-data/route_points.csv" />
+    <File Path="../../../Videos/database/sample-data/trailers.csv" />
+    <File Path="../../../Videos/database/sample-data/trips.csv" />
+    <File Path="../../../Videos/database/sample-data/trip_stops.csv" />
+    <File Path="../../../Videos/database/sample-data/vehicles.csv" />
+  </Folder>
+  <Project Path="FleetFlow.Dispatch.WinForms/FleetFlow.Dispatch.WinForms.csproj" />
+</Solution>
