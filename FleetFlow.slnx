@@ -11,6 +11,7 @@
     <File Path="012_create_dashboard_api.sql" />
     <File Path="013_create_dispatch_board_api.sql" />
     <File Path="014_create_trip_details_api.sql" />
+    <File Path="015_create_trips_list_api.sql" />
   </Folder>
   <Folder Name="/database/sample-data/">
     <File Path="../../../Videos/database/sample-data/customers.csv" />
@@ -22,6 +23,9 @@
     <File Path="../../../Videos/database/sample-data/trips.csv" />
     <File Path="../../../Videos/database/sample-data/trip_stops.csv" />
     <File Path="../../../Videos/database/sample-data/vehicles.csv" />
+    <File Path="016_create_loads_list_api.sql" />
+    <File Path="017_seed_extended_demo_data.sql" />
+    <File Path="018_create_load_details_api.sql" />
   </Folder>
   <Project Path="FleetFlow.Application/FleetFlow.Application.csproj" Id="9ce886dc-17ed-424a-a488-c78ebc964daf" />
   <Project Path="FleetFlow.Dispatch.WinForms/FleetFlow.Dispatch.WinForms.csproj" />
