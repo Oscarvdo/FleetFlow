@@ -20,5 +20,8 @@
     <File Path="../../../Videos/database/sample-data/trip_stops.csv" />
     <File Path="../../../Videos/database/sample-data/vehicles.csv" />
   </Folder>
+  <Project Path="FleetFlow.Application/FleetFlow.Application.csproj" Id="9ce886dc-17ed-424a-a488-c78ebc964daf" />
   <Project Path="FleetFlow.Dispatch.WinForms/FleetFlow.Dispatch.WinForms.csproj" />
+  <Project Path="FleetFlow.Domain/FleetFlow.Domain.csproj" Id="9708ff22-a4ef-41b9-9ce0-0818438839ca" />
+  <Project Path="FleetFlow.Infrastructure/FleetFlow.Infrastructure.csproj" Id="10ec46d6-e2e4-4c8e-946f-bf4481bf125a" />
 </Solution>
