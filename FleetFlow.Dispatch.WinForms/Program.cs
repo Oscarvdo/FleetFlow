@@ -1,55 +1,76 @@
-using Microsoft.Extensions.Hosting;
-
+using FleetFlow.Dispatch.WinForms.Forms.Authentication;
+using FleetFlow.Dispatch.WinForms.Forms.Main;
 using FleetFlow.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
- 
+using Microsoft.Extensions.Hosting;
 
-namespace FleetFlow.Dispatch.WinForms
+namespace FleetFlow.Dispatch.WinForms;
+
+internal static class Program
 {
-    internal static class Program
+    [STAThread]
+    static void Main()
     {
-        [STAThread]
-        static void Main()
+        ApplicationConfiguration.Initialize();
+
+        HostApplicationBuilder builder =
+            Host.CreateApplicationBuilder(
+                new HostApplicationBuilderSettings
+                {
+                    ContentRootPath = AppContext.BaseDirectory
+                });
+
+        builder.Configuration
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile(
+                "appsettings.json",
+                optional: false,
+                reloadOnChange: false);
+
+        string connectionString =
+            builder.Configuration["ConnectionStrings:FleetFlowDb"]
+            ?? throw new InvalidOperationException(
+                "Connection string 'FleetFlowDb' was not found.");
+
+        builder.Services.AddFleetFlowInfrastructure(
+            connectionString);
+
+        builder.Services.AddTransient<LoginForm>();
+       
+
+        using IHost host = builder.Build();
+
+        host.StartAsync()
+            .GetAwaiter()
+            .GetResult();
+
+        try
         {
-            ApplicationConfiguration.Initialize();
+            using LoginForm loginForm =
+                host.Services.GetRequiredService<LoginForm>();
 
-            HostApplicationBuilder builder =
-    Host.CreateApplicationBuilder(
-        new HostApplicationBuilderSettings
+            DialogResult loginResult =
+                loginForm.ShowDialog();
+
+            if (loginResult != DialogResult.OK ||
+                loginForm.AuthenticatedSession is null)
+            {
+                return;
+            }
+
+            using MainForm mainForm =
+     ActivatorUtilities.CreateInstance<MainForm>(
+         host.Services,
+         loginForm.AuthenticatedSession);
+
+            System.Windows.Forms.Application.Run(mainForm);
+        }
+        finally
         {
-            ContentRootPath = AppContext.BaseDirectory
-        });
-
-            string connectionString =
-                builder.Configuration.GetConnectionString("FleetFlowDb")
-                ?? throw new InvalidOperationException(
-                    "Connection string 'FleetFlowDb' was not found.");
-
-            builder.Services.AddFleetFlowInfrastructure(
-                connectionString);
-
-            builder.Services.AddTransient<Form1>();
-
-            using IHost host = builder.Build();
-
-            host.StartAsync()
+            host.StopAsync()
                 .GetAwaiter()
                 .GetResult();
-
-            try
-            {
-                Form1 initialForm =
-                    host.Services.GetRequiredService<Form1>();
-
-                System.Windows.Forms.Application.Run(initialForm);
-            }
-            finally
-            {
-                host.StopAsync()
-                    .GetAwaiter()
-                    .GetResult();
-            }
         }
     }
 }
