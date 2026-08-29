@@ -2,7 +2,7 @@
 using FleetFlow.Application.Abstractions.Security;
 using FleetFlow.Application.Authentication;
 using FleetFlow.Domain.Security;
-using FleetFlow.Infrastructure.Abstractions.Persistence;
+using FleetFlow.Application.Abstractions.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Data;

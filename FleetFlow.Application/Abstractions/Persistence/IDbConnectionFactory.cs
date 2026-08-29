@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Text; 
+using System.Text;
 
-
-namespace FleetFlow.Infrastructure.Abstractions.Persistence
+namespace FleetFlow.Application.Abstractions.Persistence
 {
     public interface IDbConnectionFactory
     {
