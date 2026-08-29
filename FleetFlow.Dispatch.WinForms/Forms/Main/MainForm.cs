@@ -5,6 +5,9 @@ using FleetFlow.Application.Authentication;
 using FleetFlow.Dispatch.WinForms.Controls.Dashboard;
 using FleetFlow.Dispatch.WinForms.Controls.Dispatch;
 using FleetFlow.Dispatch.WinForms.Forms.Trips;
+using FleetFlow.Dispatch.WinForms.Controls.Trips;
+using FleetFlow.Application.Abstractions.Loads;
+using FleetFlow.Dispatch.WinForms.Controls.Loads;
 
 namespace FleetFlow.Dispatch.WinForms.Forms.Main;
 
@@ -14,6 +17,9 @@ public partial class MainForm : Form
     private readonly IDashboardService? _dashboardService;
     private readonly IDispatchBoardService? _dispatchBoardService;
     private readonly ITripDetailsService? _tripDetailsService;
+    private readonly ITripListService? _tripListService;
+    // Servicio que obtiene la lista de cargas.
+    private readonly ILoadListService? _loadListService;
 
     public MainForm()
     {
@@ -22,17 +28,22 @@ public partial class MainForm : Form
     }
 
     public MainForm(
-        UserSession session,
-        IDashboardService dashboardService,
-        IDispatchBoardService dispatchBoardService,
-        ITripDetailsService tripDetailsService)
-        : this()
+     UserSession session,
+     IDashboardService dashboardService,
+     IDispatchBoardService dispatchBoardService,
+     ITripDetailsService tripDetailsService,
+     ITripListService tripListService,
+     ILoadListService loadListService)
+     : this()
     {
         _session = session;
         _dashboardService = dashboardService;
         _dispatchBoardService = dispatchBoardService;
         _tripDetailsService = tripDetailsService;
+        _tripListService = tripListService;
+        _loadListService = loadListService;
     }
+
 
     protected override void OnLoad(EventArgs e)
     {
@@ -127,6 +138,17 @@ public partial class MainForm : Form
             return;
         }
 
+        if (selectedButton == btnTrips)
+        {
+            ShowTrips();
+            return;
+        }
+        if (selectedButton == btnLoads)
+        {
+            ShowLoads();
+            return;
+        }
+
         ShowPlaceholder(selectedButton.Text);
     }
 
@@ -169,6 +191,52 @@ public partial class MainForm : Form
         lblPageTitle.Text = "Dispatch Board";
     }
 
+    private void ShowTrips()
+    {
+        if (_tripListService is null)
+        {
+            ShowPlaceholder("Trips unavailable");
+            return;
+        }
+
+        var tripsControl =
+            new TripsControl(_tripListService)
+            {
+                Dock = DockStyle.Fill
+            };
+
+        tripsControl.TripOpenRequested +=
+            OpenTripDetails;
+
+        ShowContent(tripsControl);
+        lblPageTitle.Text = "Trips";
+    }
+
+    /// <summary>
+    /// Muestra la lista de cargas dentro del área principal.
+    /// </summary>
+    private void ShowLoads()
+    {
+        if (_loadListService is null)
+        {
+            ShowPlaceholder("Loads unavailable");
+            return;
+        }
+
+        var loadsControl =
+            new LoadsControl(_loadListService)
+            {
+                Dock = DockStyle.Fill
+            };
+
+        // Reutilizamos el mismo formulario de detalles
+        // cuando la carga tiene un viaje relacionado.
+        loadsControl.TripOpenRequested +=
+            OpenTripDetails;
+
+        ShowContent(loadsControl);
+        lblPageTitle.Text = "Loads";
+    }
     private void OpenTripDetails(long tripId)
     {
         if (_tripDetailsService is null)
