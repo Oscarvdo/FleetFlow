@@ -8,6 +8,8 @@ public partial class DispatchBoardControl : UserControl
     private readonly IDispatchBoardService? _dispatchBoardService;
     private IReadOnlyList<DispatchBoardItem> _allTrips = [];
 
+    public event Action<long>? TripOpenRequested;
+
     public DispatchBoardControl()
     {
         InitializeComponent();
@@ -15,6 +17,7 @@ public partial class DispatchBoardControl : UserControl
         btnRefresh.Click += btnRefresh_Click;
         txtSearch.TextChanged += txtSearch_TextChanged;
         dgvTrips.CellFormatting += dgvTrips_CellFormatting;
+        dgvTrips.CellDoubleClick += dgvTrips_CellDoubleClick;
     }
 
     public DispatchBoardControl(
@@ -46,6 +49,24 @@ public partial class DispatchBoardControl : UserControl
         EventArgs e)
     {
         ApplyFilter();
+    }
+
+    private void dgvTrips_CellDoubleClick(
+        object? sender,
+        DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0)
+        {
+            return;
+        }
+
+        if (dgvTrips.Rows[e.RowIndex].DataBoundItem
+            is not DispatchBoardItem selectedTrip)
+        {
+            return;
+        }
+
+        TripOpenRequested?.Invoke(selectedTrip.TripId);
     }
 
     private async Task LoadTripsAsync()
