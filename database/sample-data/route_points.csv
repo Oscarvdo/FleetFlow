@@ -1,0 +1,9 @@
+TripNumber,PointSequence,Latitude,Longitude,CumulativeDistanceMiles,ExpectedOffsetSeconds,Instruction
+TRIP-2026-0101,1,32.170900,-110.927500,0.000,0,Depart Tucson warehouse
+TRIP-2026-0101,2,32.403800,-111.007900,22.100,1500,Continue north toward Marana
+TRIP-2026-0101,3,32.879500,-111.757400,69.300,4800,Continue through Casa Grande area
+TRIP-2026-0101,4,33.435300,-112.006900,118.400,9000,Arrive at Phoenix depot
+TRIP-2026-0102,1,33.435300,-112.006900,0.000,0,Depart Phoenix depot
+TRIP-2026-0102,2,33.740000,-112.120000,32.500,2100,Continue north on planned route
+TRIP-2026-0102,3,34.310000,-111.670000,87.600,5700,Continue toward high country
+TRIP-2026-0102,4,35.193100,-111.615300,145.200,10800,Arrive at Flagstaff center

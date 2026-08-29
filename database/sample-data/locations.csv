@@ -1,0 +1,4 @@
+LocationCode,CustomerNumber,LocationType,LocationName,Address1,Address2,City,StateCode,PostalCode,Latitude,Longitude,ContactName,ContactPhone,IsBillingLocation,IsActive
+LOC-TUS-CSR-01,CUS-2001,CUSTOMER,Copper State Tucson Warehouse,4450 S Country Club Rd,,Tucson,AZ,85714,32.170900,-110.927500,Ana Torres,520-555-1101,true,true
+LOC-PHX-ACS-01,CUS-2002,CUSTOMER,Arizona Clinical Phoenix Depot,3400 E Sky Harbor Blvd,,Phoenix,AZ,85034,33.435300,-112.006900,Marcus Lee,602-555-1102,true,true
+LOC-FLG-GCO-01,CUS-2003,CUSTOMER,Grand Canyon Flagstaff Center,2100 E Butler Ave,,Flagstaff,AZ,86004,35.193100,-111.615300,Sofia Martinez,928-555-1103,true,true

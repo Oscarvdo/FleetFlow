@@ -1,0 +1,3 @@
+LoadNumber,CustomerNumber,Description,Commodity,WeightLbs,Pieces,RevenueAmount,LoadStatusCode,SpecialInstructions
+LD-2026-0101,CUS-2001,Retail inventory transfer,Packaged household goods,26500.00,22,1925.00,PLANNED,Deliver during receiving hours
+LD-2026-0102,CUS-2002,Temperature-controlled medical supplies,Medical supplies,18400.00,14,2450.00,NEW,Maintain sealed trailer

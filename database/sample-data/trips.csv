@@ -1,0 +1,3 @@
+TripNumber,LoadNumber,TripStatusCode,ScheduledPickupUtc,ScheduledDeliveryUtc,PlannedDistanceMiles,Notes
+TRIP-2026-0101,LD-2026-0101,PLANNED,2026-09-08T15:00:00Z,2026-09-08T19:00:00Z,118.40,Tucson to Phoenix synthetic demonstration
+TRIP-2026-0102,LD-2026-0102,PLANNED,2026-09-09T14:00:00Z,2026-09-09T18:30:00Z,145.20,Phoenix to Flagstaff synthetic demonstration

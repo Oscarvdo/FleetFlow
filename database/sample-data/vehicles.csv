@@ -1,0 +1,4 @@
+UnitNumber,Vin,ModelYear,Make,Model,LicensePlate,LicenseState,MaxPayloadLbs,CurrentOdometerMiles,FleetAssetStatusCode,IsActive
+TRK-201,1FUJHHDR5PLBB0201,2023,Freightliner,Cascadia,AZF201,AZ,45000.00,84210.5,AVAILABLE,true
+TRK-202,1XKYDP9X8PJBB0202,2023,Kenworth,T680,AZK202,AZ,45000.00,91342.1,AVAILABLE,true
+TRK-203,3AKJHHDR0PSBB0203,2024,Freightliner,Cascadia,AZF203,AZ,45500.00,45680.0,MAINTENANCE,true
