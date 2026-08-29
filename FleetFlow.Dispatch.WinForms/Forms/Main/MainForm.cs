@@ -1,8 +1,10 @@
 using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
+using FleetFlow.Application.Abstractions.Trips;
 using FleetFlow.Application.Authentication;
 using FleetFlow.Dispatch.WinForms.Controls.Dashboard;
 using FleetFlow.Dispatch.WinForms.Controls.Dispatch;
+using FleetFlow.Dispatch.WinForms.Forms.Trips;
 
 namespace FleetFlow.Dispatch.WinForms.Forms.Main;
 
@@ -11,6 +13,7 @@ public partial class MainForm : Form
     private readonly UserSession? _session;
     private readonly IDashboardService? _dashboardService;
     private readonly IDispatchBoardService? _dispatchBoardService;
+    private readonly ITripDetailsService? _tripDetailsService;
 
     public MainForm()
     {
@@ -21,12 +24,14 @@ public partial class MainForm : Form
     public MainForm(
         UserSession session,
         IDashboardService dashboardService,
-        IDispatchBoardService dispatchBoardService)
+        IDispatchBoardService dispatchBoardService,
+        ITripDetailsService tripDetailsService)
         : this()
     {
         _session = session;
         _dashboardService = dashboardService;
         _dispatchBoardService = dispatchBoardService;
+        _tripDetailsService = tripDetailsService;
     }
 
     protected override void OnLoad(EventArgs e)
@@ -157,8 +162,32 @@ public partial class MainForm : Form
                 Dock = DockStyle.Fill
             };
 
+        dispatchBoardControl.TripOpenRequested +=
+            OpenTripDetails;
+
         ShowContent(dispatchBoardControl);
         lblPageTitle.Text = "Dispatch Board";
+    }
+
+    private void OpenTripDetails(long tripId)
+    {
+        if (_tripDetailsService is null)
+        {
+            MessageBox.Show(
+                "The trip details service is unavailable.",
+                "FleetFlow",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            return;
+        }
+
+        using var tripDetailsForm =
+            new TripDetailsForm(
+                tripId,
+                _tripDetailsService);
+
+        tripDetailsForm.ShowDialog(this);
     }
 
     private void ShowPlaceholder(string moduleName)
@@ -215,6 +244,7 @@ public partial class MainForm : Form
         {
             button.BackColor = Color.FromArgb(29, 39, 54);
             button.ForeColor = Color.FromArgb(220, 226, 234);
+
             button.Font = new Font(
                 "Segoe UI",
                 10F,

@@ -2,10 +2,12 @@
 using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Abstractions.Persistence;
 using FleetFlow.Application.Abstractions.Security;
+using FleetFlow.Application.Abstractions.Trips;
 using FleetFlow.Infrastructure.Dashboard;
 using FleetFlow.Infrastructure.Data;
 using FleetFlow.Infrastructure.Dispatch;
 using FleetFlow.Infrastructure.Security;
+using FleetFlow.Infrastructure.Trips;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FleetFlow.Infrastructure.DependencyInjection;
@@ -37,6 +39,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<
             IDispatchBoardService,
             SqlDispatchBoardService>();
+
+        services.AddSingleton<
+            ITripDetailsService,
+            SqlTripDetailsService>();
 
         return services;
     }

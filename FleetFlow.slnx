@@ -8,6 +8,9 @@
     <File Path="../../../Videos/database/CSV_CONTRACTS.md" />
     <File Path="../../../Videos/database/NORMALIZATION.md" />
     <File Path="../../../Videos/database/README.md" />
+    <File Path="012_create_dashboard_api.sql" />
+    <File Path="013_create_dispatch_board_api.sql" />
+    <File Path="014_create_trip_details_api.sql" />
   </Folder>
   <Folder Name="/database/sample-data/">
     <File Path="../../../Videos/database/sample-data/customers.csv" />
