@@ -1,8 +1,10 @@
 ﻿using FleetFlow.Application.Abstractions.Dashboard;
+using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Abstractions.Persistence;
 using FleetFlow.Application.Abstractions.Security;
 using FleetFlow.Infrastructure.Dashboard;
 using FleetFlow.Infrastructure.Data;
+using FleetFlow.Infrastructure.Dispatch;
 using FleetFlow.Infrastructure.Security;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,6 +33,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<
             IDashboardService,
             SqlDashboardService>();
+
+        services.AddSingleton<
+            IDispatchBoardService,
+            SqlDispatchBoardService>();
 
         return services;
     }

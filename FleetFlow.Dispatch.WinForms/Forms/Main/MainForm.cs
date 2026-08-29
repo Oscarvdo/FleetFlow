@@ -1,6 +1,8 @@
 using FleetFlow.Application.Abstractions.Dashboard;
+using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Authentication;
 using FleetFlow.Dispatch.WinForms.Controls.Dashboard;
+using FleetFlow.Dispatch.WinForms.Controls.Dispatch;
 
 namespace FleetFlow.Dispatch.WinForms.Forms.Main;
 
@@ -8,6 +10,7 @@ public partial class MainForm : Form
 {
     private readonly UserSession? _session;
     private readonly IDashboardService? _dashboardService;
+    private readonly IDispatchBoardService? _dispatchBoardService;
 
     public MainForm()
     {
@@ -17,11 +20,13 @@ public partial class MainForm : Form
 
     public MainForm(
         UserSession session,
-        IDashboardService dashboardService)
+        IDashboardService dashboardService,
+        IDispatchBoardService dispatchBoardService)
         : this()
     {
         _session = session;
         _dashboardService = dashboardService;
+        _dispatchBoardService = dispatchBoardService;
     }
 
     protected override void OnLoad(EventArgs e)
@@ -111,6 +116,12 @@ public partial class MainForm : Form
             return;
         }
 
+        if (selectedButton == btnDispatch)
+        {
+            ShowDispatchBoard();
+            return;
+        }
+
         ShowPlaceholder(selectedButton.Text);
     }
 
@@ -130,6 +141,24 @@ public partial class MainForm : Form
 
         ShowContent(dashboardControl);
         lblPageTitle.Text = "Dashboard";
+    }
+
+    private void ShowDispatchBoard()
+    {
+        if (_dispatchBoardService is null)
+        {
+            ShowPlaceholder("Dispatch Board unavailable");
+            return;
+        }
+
+        var dispatchBoardControl =
+            new DispatchBoardControl(_dispatchBoardService)
+            {
+                Dock = DockStyle.Fill
+            };
+
+        ShowContent(dispatchBoardControl);
+        lblPageTitle.Text = "Dispatch Board";
     }
 
     private void ShowPlaceholder(string moduleName)
@@ -192,8 +221,11 @@ public partial class MainForm : Form
                 FontStyle.Regular);
         }
 
-        selectedButton.BackColor = Color.FromArgb(243, 108, 33);
+        selectedButton.BackColor =
+            Color.FromArgb(243, 108, 33);
+
         selectedButton.ForeColor = Color.White;
+
         selectedButton.Font = new Font(
             "Segoe UI",
             10F,
