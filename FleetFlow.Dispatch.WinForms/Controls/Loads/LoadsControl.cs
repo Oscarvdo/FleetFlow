@@ -16,9 +16,15 @@ public partial class LoadsControl : UserControl
     private IReadOnlyList<LoadListItem> _allLoads = [];
 
     /// <summary>
+<<<<<<< HEAD
     /// Notifica al MainForm que debe abrir el viaje indicado.
     /// </summary>
     public event Action<long>? TripOpenRequested;
+=======
+    /// Notifica al MainForm que debe abrir la carga seleccionada.
+    /// </summary>
+    public event Action<long>? LoadOpenRequested;
+>>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
 
     public LoadsControl()
     {
@@ -317,8 +323,12 @@ public partial class LoadsControl : UserControl
     }
 
     /// <summary>
+<<<<<<< HEAD
     /// Abre el viaje asociado cuando el usuario hace
     /// doble clic sobre una carga.
+=======
+    /// Solicita abrir los detalles de la carga seleccionada.
+>>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     /// </summary>
     private void dgvLoads_CellDoubleClick(
         object? sender,
@@ -335,6 +345,7 @@ public partial class LoadsControl : UserControl
             return;
         }
 
+<<<<<<< HEAD
         if (selectedLoad.TripId is not long tripId)
         {
             MessageBox.Show(
@@ -347,6 +358,10 @@ public partial class LoadsControl : UserControl
         }
 
         TripOpenRequested?.Invoke(tripId);
+=======
+        LoadOpenRequested?.Invoke(
+            selectedLoad.LoadId);
+>>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     }
 
     /// <summary>
@@ -420,4 +435,8 @@ public partial class LoadsControl : UserControl
     private sealed record LoadStatusFilter(
         string? StatusCode,
         string DisplayName);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)

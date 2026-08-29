@@ -55,7 +55,11 @@ public static class ServiceCollectionExtensions
             IDispatchBoardService,
             SqlDispatchBoardService>();
 
+<<<<<<< HEAD
         // Servicio que obtiene el detalle de un viaje.
+=======
+        // Servicio que obtiene los detalles de un viaje.
+>>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
         services.AddSingleton<
             ITripDetailsService,
             SqlTripDetailsService>();
@@ -70,6 +74,15 @@ public static class ServiceCollectionExtensions
             ILoadListService,
             SqlLoadListService>();
 
+<<<<<<< HEAD
+=======
+        // Servicio que obtiene los detalles completos
+        // de una carga seleccionada.
+        services.AddSingleton<
+            ILoadDetailsService,
+            SqlLoadDetailsService>();
+
+>>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
         return services;
     }
 }
