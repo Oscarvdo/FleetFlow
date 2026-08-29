@@ -1,4 +1,4 @@
-﻿using FleetFlow.Infrastructure.Abstractions.Persistence;
+﻿using FleetFlow.Application.Abstractions.Persistence;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
