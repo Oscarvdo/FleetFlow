@@ -5,44 +5,43 @@ namespace FleetFlow.Dispatch.WinForms.Controls.Loads;
 
 /// <summary>
 /// Muestra las cargas disponibles en FleetFlow y permite
-/// buscar, filtrar y abrir el viaje asociado.
+/// buscar, filtrar, crear y abrir cargas.
 /// </summary>
 public partial class LoadsControl : UserControl
 {
-    private readonly ILoadListService? _loadListService;
+    private readonly ILoadListService?
+        _loadListService;
 
     // Conservamos la lista completa para aplicar filtros
     // localmente sin consultar SQL Server en cada tecla.
     private IReadOnlyList<LoadListItem> _allLoads = [];
 
     /// <summary>
-<<<<<<< HEAD
-    /// Notifica al MainForm que debe abrir el viaje indicado.
-    /// </summary>
-    public event Action<long>? TripOpenRequested;
-=======
-    /// Notifica al MainForm que debe abrir la carga seleccionada.
+    /// Notifica al MainForm que debe abrir
+    /// la carga seleccionada.
     /// </summary>
     public event Action<long>? LoadOpenRequested;
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
 
+    /// <summary>
+    /// Notifica al MainForm que el usuario desea
+    /// crear una carga nueva.
+    /// </summary>
+    public event EventHandler? LoadCreateRequested;
+
+    /// <summary>
+    /// Constructor utilizado por Visual Studio Designer.
+    /// </summary>
     public LoadsControl()
     {
         InitializeComponent();
 
         ConfigureGrid();
         ConfigureStatusFilter();
-
-        btnRefresh.Click += btnRefresh_Click;
-        txtSearch.TextChanged += FilterChanged;
-        cboStatus.SelectedIndexChanged += FilterChanged;
-        dgvLoads.CellFormatting += dgvLoads_CellFormatting;
-        dgvLoads.CellDoubleClick += dgvLoads_CellDoubleClick;
+        WireEvents();
     }
 
     /// <summary>
     /// Constructor utilizado durante la ejecución.
-    /// El servicio es proporcionado mediante inyección de dependencias.
     /// </summary>
     public LoadsControl(
         ILoadListService loadListService)
@@ -55,12 +54,32 @@ public partial class LoadsControl : UserControl
     {
         base.OnLoad(e);
 
-        // El constructor sin parámetros es necesario para el diseñador.
-        // Por eso verificamos que el servicio exista antes de consultar.
+        // El constructor sin parámetros es necesario
+        // para Visual Studio Designer.
         if (_loadListService is not null)
         {
             await LoadLoadsAsync();
         }
+    }
+
+    /// <summary>
+    /// Conecta los eventos de los controles.
+    /// </summary>
+    private void WireEvents()
+    {
+        btnRefresh.Click += btnRefresh_Click;
+        btnNewLoad.Click += btnNewLoad_Click;
+
+        txtSearch.TextChanged += FilterChanged;
+
+        cboStatus.SelectedIndexChanged +=
+            FilterChanged;
+
+        dgvLoads.CellFormatting +=
+            dgvLoads_CellFormatting;
+
+        dgvLoads.CellDoubleClick +=
+            dgvLoads_CellDoubleClick;
     }
 
     /// <summary>
@@ -140,7 +159,8 @@ public partial class LoadsControl : UserControl
             new DataGridViewTextBoxColumn
             {
                 Name = "colPickup",
-                DataPropertyName = "ScheduledPickupUtc",
+                DataPropertyName =
+                    "ScheduledPickupUtc",
                 HeaderText = "PICKUP",
                 FillWeight = 110F,
                 ReadOnly = true
@@ -148,7 +168,8 @@ public partial class LoadsControl : UserControl
     }
 
     /// <summary>
-    /// Configura los estados existentes en dbo.LoadStatuses.
+    /// Configura los estados existentes
+    /// en dbo.LoadStatuses.
     /// </summary>
     private void ConfigureStatusFilter()
     {
@@ -188,6 +209,20 @@ public partial class LoadsControl : UserControl
         cboStatus.SelectedIndex = 0;
     }
 
+    /// <summary>
+    /// Solicita al MainForm abrir CreateLoadForm.
+    /// LoadsControl no crea directamente el formulario
+    /// porque MainForm administra las dependencias.
+    /// </summary>
+    private void btnNewLoad_Click(
+        object? sender,
+        EventArgs e)
+    {
+        LoadCreateRequested?.Invoke(
+            this,
+            EventArgs.Empty);
+    }
+
     private async void btnRefresh_Click(
         object? sender,
         EventArgs e)
@@ -200,6 +235,15 @@ public partial class LoadsControl : UserControl
         EventArgs e)
     {
         ApplyLocalFilter();
+    }
+
+    /// <summary>
+    /// Permite que MainForm actualice la lista después
+    /// de crear una carga correctamente.
+    /// </summary>
+    public async Task RefreshLoadsAsync()
+    {
+        await LoadLoadsAsync();
     }
 
     /// <summary>
@@ -323,12 +367,8 @@ public partial class LoadsControl : UserControl
     }
 
     /// <summary>
-<<<<<<< HEAD
-    /// Abre el viaje asociado cuando el usuario hace
-    /// doble clic sobre una carga.
-=======
-    /// Solicita abrir los detalles de la carga seleccionada.
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
+    /// Solicita abrir los detalles de la carga
+    /// seleccionada mediante doble clic.
     /// </summary>
     private void dgvLoads_CellDoubleClick(
         object? sender,
@@ -345,27 +385,13 @@ public partial class LoadsControl : UserControl
             return;
         }
 
-<<<<<<< HEAD
-        if (selectedLoad.TripId is not long tripId)
-        {
-            MessageBox.Show(
-                "This load does not have an assigned trip.",
-                "FleetFlow",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-
-            return;
-        }
-
-        TripOpenRequested?.Invoke(tripId);
-=======
         LoadOpenRequested?.Invoke(
             selectedLoad.LoadId);
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     }
 
     /// <summary>
-    /// Convierte valores técnicos en texto más fácil de leer.
+    /// Convierte valores técnicos en texto
+    /// más fácil de leer.
     /// </summary>
     private void dgvLoads_CellFormatting(
         object? sender,
@@ -380,7 +406,8 @@ public partial class LoadsControl : UserControl
             dgvLoads.Columns[e.ColumnIndex]
                 .DataPropertyName;
 
-        if (propertyName == "ScheduledPickupUtc" &&
+        if (propertyName ==
+                "ScheduledPickupUtc" &&
             e.Value is DateTime pickupUtc)
         {
             DateTime utc =
@@ -418,6 +445,7 @@ public partial class LoadsControl : UserControl
     private void SetBusyState(bool isBusy)
     {
         btnRefresh.Enabled = !isBusy;
+        btnNewLoad.Enabled = !isBusy;
         txtSearch.Enabled = !isBusy;
         cboStatus.Enabled = !isBusy;
 
@@ -435,8 +463,4 @@ public partial class LoadsControl : UserControl
     private sealed record LoadStatusFilter(
         string? StatusCode,
         string DisplayName);
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)

@@ -1,3 +1,4 @@
+using FleetFlow.Application.Abstractions.Customers;
 using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Abstractions.Loads;
@@ -9,23 +10,12 @@ using FleetFlow.Dispatch.WinForms.Controls.Loads;
 using FleetFlow.Dispatch.WinForms.Controls.Trips;
 using FleetFlow.Dispatch.WinForms.Forms.Loads;
 using FleetFlow.Dispatch.WinForms.Forms.Trips;
-using FleetFlow.Dispatch.WinForms.Controls.Trips;
-using FleetFlow.Application.Abstractions.Loads;
-using FleetFlow.Dispatch.WinForms.Controls.Loads;
 
 namespace FleetFlow.Dispatch.WinForms.Forms.Main;
 
 public partial class MainForm : Form
 {
     private readonly UserSession? _session;
-<<<<<<< HEAD
-    private readonly IDashboardService? _dashboardService;
-    private readonly IDispatchBoardService? _dispatchBoardService;
-    private readonly ITripDetailsService? _tripDetailsService;
-    private readonly ITripListService? _tripListService;
-    // Servicio que obtiene la lista de cargas.
-    private readonly ILoadListService? _loadListService;
-=======
 
     private readonly IDashboardService?
         _dashboardService;
@@ -44,7 +34,12 @@ public partial class MainForm : Form
 
     private readonly ILoadDetailsService?
         _loadDetailsService;
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
+
+    private readonly ILoadCommandService?
+        _loadCommandService;
+
+    private readonly ICustomerLookupService?
+        _customerLookupService;
 
     public MainForm()
     {
@@ -58,24 +53,16 @@ public partial class MainForm : Form
     /// los servicios registrados en Infrastructure.
     /// </summary>
     public MainForm(
-<<<<<<< HEAD
-     UserSession session,
-     IDashboardService dashboardService,
-     IDispatchBoardService dispatchBoardService,
-     ITripDetailsService tripDetailsService,
-     ITripListService tripListService,
-     ILoadListService loadListService)
-     : this()
-=======
         UserSession session,
         IDashboardService dashboardService,
         IDispatchBoardService dispatchBoardService,
         ITripDetailsService tripDetailsService,
         ITripListService tripListService,
         ILoadListService loadListService,
-        ILoadDetailsService loadDetailsService)
+        ILoadDetailsService loadDetailsService,
+        ILoadCommandService loadCommandService,
+        ICustomerLookupService customerLookupService)
         : this()
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     {
         _session = session;
         _dashboardService = dashboardService;
@@ -83,12 +70,10 @@ public partial class MainForm : Form
         _tripDetailsService = tripDetailsService;
         _tripListService = tripListService;
         _loadListService = loadListService;
-<<<<<<< HEAD
-=======
         _loadDetailsService = loadDetailsService;
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
+        _loadCommandService = loadCommandService;
+        _customerLookupService = customerLookupService;
     }
-
 
     protected override void OnLoad(EventArgs e)
     {
@@ -234,22 +219,15 @@ public partial class MainForm : Form
             ShowTrips();
             return;
         }
-<<<<<<< HEAD
-=======
 
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
         if (selectedButton == btnLoads)
         {
             ShowLoads();
             return;
         }
 
-<<<<<<< HEAD
-        ShowPlaceholder(selectedButton.Text);
-=======
         ShowPlaceholder(
             selectedButton.Text);
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     }
 
     /// <summary>
@@ -304,12 +282,9 @@ public partial class MainForm : Form
         lblPageTitle.Text = "Dispatch Board";
     }
 
-<<<<<<< HEAD
-=======
     /// <summary>
     /// Muestra todos los viajes y sus filtros.
     /// </summary>
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     private void ShowTrips()
     {
         if (_tripListService is null)
@@ -319,12 +294,8 @@ public partial class MainForm : Form
         }
 
         var tripsControl =
-<<<<<<< HEAD
-            new TripsControl(_tripListService)
-=======
             new TripsControl(
                 _tripListService)
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
             {
                 Dock = DockStyle.Fill
             };
@@ -337,11 +308,7 @@ public partial class MainForm : Form
     }
 
     /// <summary>
-<<<<<<< HEAD
-    /// Muestra la lista de cargas dentro del área principal.
-=======
     /// Muestra todas las cargas y sus filtros.
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     /// </summary>
     private void ShowLoads()
     {
@@ -352,32 +319,74 @@ public partial class MainForm : Form
         }
 
         var loadsControl =
-<<<<<<< HEAD
-            new LoadsControl(_loadListService)
-=======
             new LoadsControl(
                 _loadListService)
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
             {
                 Dock = DockStyle.Fill
             };
 
-<<<<<<< HEAD
-        // Reutilizamos el mismo formulario de detalles
-        // cuando la carga tiene un viaje relacionado.
-        loadsControl.TripOpenRequested +=
-            OpenTripDetails;
-=======
         // El doble clic abre LoadDetailsForm.
         loadsControl.LoadOpenRequested +=
             OpenLoadDetails;
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
+
+        // El botón New Load solicita a MainForm
+        // abrir CreateLoadForm.
+        loadsControl.LoadCreateRequested +=
+            OpenCreateLoad;
 
         ShowContent(loadsControl);
         lblPageTitle.Text = "Loads";
     }
-<<<<<<< HEAD
-=======
+
+    /// <summary>
+    /// Abre el formulario para crear una carga.
+    /// Si la operación finaliza correctamente,
+    /// actualiza la lista sin cambiar de módulo.
+    /// </summary>
+    private async void OpenCreateLoad(
+        object? sender,
+        EventArgs e)
+    {
+        if (_session is null ||
+            !_session.HasPermission("LOADS.MANAGE"))
+        {
+            MessageBox.Show(
+                "You do not have permission to create loads.",
+                "FleetFlow",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            return;
+        }
+
+        if (_loadCommandService is null ||
+            _customerLookupService is null)
+        {
+            MessageBox.Show(
+                "The load creation services are unavailable.",
+                "FleetFlow",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            return;
+        }
+
+        using var createLoadForm =
+            new CreateLoadForm(
+                _loadCommandService,
+                _customerLookupService);
+
+        DialogResult result =
+            createLoadForm.ShowDialog(this);
+
+        // El formulario establece DialogResult.OK
+        // únicamente después de guardar en SQL Server.
+        if (result == DialogResult.OK &&
+            sender is LoadsControl loadsControl)
+        {
+            await loadsControl.RefreshLoadsAsync();
+        }
+    }
 
     /// <summary>
     /// Abre el detalle de la carga seleccionada.
@@ -408,7 +417,6 @@ public partial class MainForm : Form
     /// <summary>
     /// Abre el detalle del viaje seleccionado.
     /// </summary>
->>>>>>> c1969a3 (Add loads module and load details workflowAdd loads module and extended demo dataset)
     private void OpenTripDetails(long tripId)
     {
         if (_tripDetailsService is null)
