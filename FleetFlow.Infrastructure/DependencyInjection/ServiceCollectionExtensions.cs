@@ -1,9 +1,11 @@
-﻿using FleetFlow.Application.Abstractions.Dashboard;
+﻿using FleetFlow.Application.Abstractions.Customers;
+using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Abstractions.Loads;
 using FleetFlow.Application.Abstractions.Persistence;
 using FleetFlow.Application.Abstractions.Security;
 using FleetFlow.Application.Abstractions.Trips;
+using FleetFlow.Infrastructure.Customers;
 using FleetFlow.Infrastructure.Dashboard;
 using FleetFlow.Infrastructure.Data;
 using FleetFlow.Infrastructure.Dispatch;
@@ -35,46 +37,62 @@ public static class ServiceCollectionExtensions
                 nameof(connectionString));
         }
 
-        // Se utiliza una sola fábrica porque únicamente conserva
-        // la cadena de conexión; cada operación crea su conexión.
+        // Esta fábrica conserva la cadena de conexión.
+        // Cada servicio crea y elimina su propia conexión SQL.
         services.AddSingleton<IDbConnectionFactory>(
             new SqlConnectionFactory(connectionString));
 
-        // Servicio responsable de autenticar usuarios.
+        // Autentica usuarios y recupera
+        // sus roles y permisos.
         services.AddSingleton<
             IAuthenticationService,
             SqlAuthenticationService>();
 
-        // Servicio que obtiene los indicadores del dashboard.
+        // Obtiene los indicadores generales
+        // del dashboard.
         services.AddSingleton<
             IDashboardService,
             SqlDashboardService>();
 
-        // Servicio que obtiene los viajes activos del despacho.
+        // Obtiene los viajes activos que aparecen
+        // en el tablero de despacho.
         services.AddSingleton<
             IDispatchBoardService,
             SqlDispatchBoardService>();
 
-        // Servicio que obtiene los detalles de un viaje.
+        // Obtiene la información completa de un viaje,
+        // incluyendo paradas e historial de estados.
         services.AddSingleton<
             ITripDetailsService,
             SqlTripDetailsService>();
 
-        // Servicio que obtiene y filtra la lista de viajes.
+        // Obtiene la lista general de viajes.
         services.AddSingleton<
             ITripListService,
             SqlTripListService>();
 
-        // Servicio que obtiene y filtra la lista de cargas.
+        // Obtiene la lista general de cargas.
         services.AddSingleton<
             ILoadListService,
             SqlLoadListService>();
 
-        // Servicio que obtiene los detalles completos
+        // Obtiene los detalles completos
         // de una carga seleccionada.
         services.AddSingleton<
             ILoadDetailsService,
             SqlLoadDetailsService>();
+
+        // Ejecuta operaciones que modifican cargas,
+        // comenzando con la creación de una carga.
+        services.AddSingleton<
+            ILoadCommandService,
+            SqlLoadCommandService>();
+
+        // Obtiene los clientes activos utilizados
+        // por los controles de selección.
+        services.AddSingleton<
+            ICustomerLookupService,
+            SqlCustomerLookupService>();
 
         return services;
     }

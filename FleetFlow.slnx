@@ -12,6 +12,7 @@
     <File Path="013_create_dispatch_board_api.sql" />
     <File Path="014_create_trip_details_api.sql" />
     <File Path="015_create_trips_list_api.sql" />
+    <File Path="019_create_load_update_api.sql" />
   </Folder>
   <Folder Name="/database/sample-data/">
     <File Path="../../../Videos/database/sample-data/customers.csv" />

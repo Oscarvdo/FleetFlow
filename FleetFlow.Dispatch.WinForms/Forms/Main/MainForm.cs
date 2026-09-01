@@ -1,3 +1,4 @@
+using FleetFlow.Application.Abstractions.Customers;
 using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Abstractions.Loads;
@@ -34,6 +35,12 @@ public partial class MainForm : Form
     private readonly ILoadDetailsService?
         _loadDetailsService;
 
+    private readonly ILoadCommandService?
+        _loadCommandService;
+
+    private readonly ICustomerLookupService?
+        _customerLookupService;
+
     public MainForm()
     {
         InitializeComponent();
@@ -52,7 +59,9 @@ public partial class MainForm : Form
         ITripDetailsService tripDetailsService,
         ITripListService tripListService,
         ILoadListService loadListService,
-        ILoadDetailsService loadDetailsService)
+        ILoadDetailsService loadDetailsService,
+        ILoadCommandService loadCommandService,
+        ICustomerLookupService customerLookupService)
         : this()
     {
         _session = session;
@@ -62,6 +71,8 @@ public partial class MainForm : Form
         _tripListService = tripListService;
         _loadListService = loadListService;
         _loadDetailsService = loadDetailsService;
+        _loadCommandService = loadCommandService;
+        _customerLookupService = customerLookupService;
     }
 
     protected override void OnLoad(EventArgs e)
@@ -318,8 +329,63 @@ public partial class MainForm : Form
         loadsControl.LoadOpenRequested +=
             OpenLoadDetails;
 
+        // El botón New Load solicita a MainForm
+        // abrir CreateLoadForm.
+        loadsControl.LoadCreateRequested +=
+            OpenCreateLoad;
+
         ShowContent(loadsControl);
         lblPageTitle.Text = "Loads";
+    }
+
+    /// <summary>
+    /// Abre el formulario para crear una carga.
+    /// Si la operación finaliza correctamente,
+    /// actualiza la lista sin cambiar de módulo.
+    /// </summary>
+    private async void OpenCreateLoad(
+        object? sender,
+        EventArgs e)
+    {
+        if (_session is null ||
+            !_session.HasPermission("LOADS.MANAGE"))
+        {
+            MessageBox.Show(
+                "You do not have permission to create loads.",
+                "FleetFlow",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            return;
+        }
+
+        if (_loadCommandService is null ||
+            _customerLookupService is null)
+        {
+            MessageBox.Show(
+                "The load creation services are unavailable.",
+                "FleetFlow",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            return;
+        }
+
+        using var createLoadForm =
+            new CreateLoadForm(
+                _loadCommandService,
+                _customerLookupService);
+
+        DialogResult result =
+            createLoadForm.ShowDialog(this);
+
+        // El formulario establece DialogResult.OK
+        // únicamente después de guardar en SQL Server.
+        if (result == DialogResult.OK &&
+            sender is LoadsControl loadsControl)
+        {
+            await loadsControl.RefreshLoadsAsync();
+        }
     }
 
     /// <summary>

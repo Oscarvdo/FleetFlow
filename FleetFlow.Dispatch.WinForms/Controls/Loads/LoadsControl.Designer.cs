@@ -16,6 +16,7 @@ partial class LoadsControl
     private TextBox txtSearch;
     private ComboBox cboStatus;
     private Button btnRefresh;
+    private Button btnNewLoad;
     private DataGridView dgvLoads;
 
     protected override void Dispose(bool disposing)
@@ -38,6 +39,7 @@ partial class LoadsControl
         txtSearch = new TextBox();
         cboStatus = new ComboBox();
         btnRefresh = new Button();
+        btnNewLoad = new Button();
         pnlSummary = new Panel();
         lblCount = new Label();
         lblStatus = new Label();
@@ -66,18 +68,20 @@ partial class LoadsControl
         // 
         // tlpFilters
         // 
-        tlpFilters.ColumnCount = 3;
+        tlpFilters.ColumnCount = 4;
         tlpFilters.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        tlpFilters.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 251F));
-        tlpFilters.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+        tlpFilters.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 230F));
+        tlpFilters.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
+        tlpFilters.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 165F));
         tlpFilters.Controls.Add(txtSearch, 0, 0);
         tlpFilters.Controls.Add(cboStatus, 1, 0);
         tlpFilters.Controls.Add(btnRefresh, 2, 0);
+        tlpFilters.Controls.Add(btnNewLoad, 3, 0);
         tlpFilters.Dock = DockStyle.Bottom;
         tlpFilters.Location = new Point(0, 142);
         tlpFilters.Margin = new Padding(3, 4, 3, 4);
         tlpFilters.Name = "tlpFilters";
-        tlpFilters.Padding = new Padding(32, 16, 32, 16);
+        tlpFilters.Padding = new Padding(32, 16, 20, 16);
         tlpFilters.RowCount = 1;
         tlpFilters.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         tlpFilters.Size = new Size(1045, 85);
@@ -88,10 +92,10 @@ partial class LoadsControl
         txtSearch.Dock = DockStyle.Fill;
         txtSearch.Font = new Font("Segoe UI", 10F);
         txtSearch.Location = new Point(35, 19);
-        txtSearch.Margin = new Padding(3, 3, 11, 3);
+        txtSearch.Margin = new Padding(3, 3, 12, 3);
         txtSearch.Name = "txtSearch";
         txtSearch.PlaceholderText = "Search load, customer, commodity, trip...";
-        txtSearch.Size = new Size(573, 30);
+        txtSearch.Size = new Size(453, 30);
         txtSearch.TabIndex = 0;
         // 
         // cboStatus
@@ -99,28 +103,46 @@ partial class LoadsControl
         cboStatus.Dock = DockStyle.Fill;
         cboStatus.DropDownStyle = ComboBoxStyle.DropDownList;
         cboStatus.Font = new Font("Segoe UI", 10F);
-        cboStatus.Location = new Point(619, 19);
-        cboStatus.Margin = new Padding(0, 3, 11, 3);
+        cboStatus.FormattingEnabled = true;
+        cboStatus.Location = new Point(500, 19);
+        cboStatus.Margin = new Padding(0, 3, 12, 3);
         cboStatus.Name = "cboStatus";
-        cboStatus.Size = new Size(240, 31);
+        cboStatus.Size = new Size(218, 31);
         cboStatus.TabIndex = 1;
         // 
         // btnRefresh
         // 
-        btnRefresh.BackColor = Color.FromArgb(243, 108, 33);
+        btnRefresh.BackColor = Color.FromArgb(233, 237, 242);
         btnRefresh.Cursor = Cursors.Hand;
         btnRefresh.Dock = DockStyle.Fill;
-        btnRefresh.FlatAppearance.BorderSize = 0;
+        btnRefresh.FlatAppearance.BorderColor = Color.FromArgb(205, 211, 220);
         btnRefresh.FlatStyle = FlatStyle.Flat;
         btnRefresh.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-        btnRefresh.ForeColor = Color.White;
-        btnRefresh.Location = new Point(870, 17);
-        btnRefresh.Margin = new Padding(0, 1, 0, 1);
+        btnRefresh.ForeColor = Color.FromArgb(45, 55, 70);
+        btnRefresh.Location = new Point(730, 17);
+        btnRefresh.Margin = new Padding(0, 1, 12, 1);
         btnRefresh.Name = "btnRefresh";
-        btnRefresh.Size = new Size(143, 51);
+        btnRefresh.Size = new Size(118, 51);
         btnRefresh.TabIndex = 2;
         btnRefresh.Text = "Refresh";
         btnRefresh.UseVisualStyleBackColor = false;
+        // 
+        // btnNewLoad
+        // 
+        btnNewLoad.BackColor = Color.FromArgb(243, 108, 33);
+        btnNewLoad.Cursor = Cursors.Hand;
+        btnNewLoad.Dock = DockStyle.Fill;
+        btnNewLoad.FlatAppearance.BorderSize = 0;
+        btnNewLoad.FlatStyle = FlatStyle.Flat;
+        btnNewLoad.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        btnNewLoad.ForeColor = Color.White;
+        btnNewLoad.Location = new Point(860, 17);
+        btnNewLoad.Margin = new Padding(0, 1, 0, 1);
+        btnNewLoad.Name = "btnNewLoad";
+        btnNewLoad.Size = new Size(165, 51);
+        btnNewLoad.TabIndex = 3;
+        btnNewLoad.Text = "+ New Load";
+        btnNewLoad.UseVisualStyleBackColor = false;
         // 
         // pnlSummary
         // 
