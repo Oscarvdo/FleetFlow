@@ -15,6 +15,7 @@ partial class LoadDetailsForm
     private Label lblLoadStatus;
 
     private Button btnRefresh;
+    private Button btnEditLoad;
     private Button btnOpenTrip;
     private Button btnClose;
 
@@ -78,6 +79,7 @@ partial class LoadDetailsForm
         lblLoadStatus = new Label();
 
         btnRefresh = new Button();
+        btnEditLoad = new Button();
         btnOpenTrip = new Button();
         btnClose = new Button();
 
@@ -133,6 +135,7 @@ partial class LoadDetailsForm
             Color.FromArgb(29, 39, 54);
         pnlHeader.Controls.Add(lblLoadNumber);
         pnlHeader.Controls.Add(lblLoadStatus);
+        pnlHeader.Controls.Add(btnEditLoad);
         pnlHeader.Controls.Add(btnRefresh);
         pnlHeader.Controls.Add(btnOpenTrip);
         pnlHeader.Controls.Add(btnClose);
@@ -167,12 +170,34 @@ partial class LoadDetailsForm
         lblLoadStatus.Name = "lblLoadStatus";
         lblLoadStatus.Text = "STATUS";
 
+        // btnEditLoad
+        btnEditLoad.Anchor =
+            AnchorStyles.Top |
+            AnchorStyles.Right;
+        btnEditLoad.BackColor =
+            Color.FromArgb(243, 108, 33);
+        btnEditLoad.Cursor = Cursors.Hand;
+        btnEditLoad.FlatAppearance.BorderSize = 0;
+        btnEditLoad.FlatStyle = FlatStyle.Flat;
+        btnEditLoad.Font = new System.Drawing.Font(
+            "Segoe UI",
+            9F,
+            FontStyle.Bold);
+        btnEditLoad.ForeColor = Color.White;
+        btnEditLoad.Location =
+            new Point(421, 29);
+        btnEditLoad.Name = "btnEditLoad";
+        btnEditLoad.Size =
+            new Size(110, 36);
+        btnEditLoad.Text = "Edit Load";
+        btnEditLoad.UseVisualStyleBackColor = false;
+
         // btnRefresh
         btnRefresh.Anchor =
             AnchorStyles.Top |
             AnchorStyles.Right;
         btnRefresh.BackColor =
-            Color.FromArgb(243, 108, 33);
+            Color.FromArgb(55, 68, 86);
         btnRefresh.Cursor = Cursors.Hand;
         btnRefresh.FlatAppearance.BorderSize = 0;
         btnRefresh.FlatStyle = FlatStyle.Flat;
@@ -182,7 +207,7 @@ partial class LoadDetailsForm
             FontStyle.Bold);
         btnRefresh.ForeColor = Color.White;
         btnRefresh.Location =
-            new Point(543, 29);
+            new Point(542, 29);
         btnRefresh.Name = "btnRefresh";
         btnRefresh.Size =
             new Size(95, 36);
@@ -568,7 +593,6 @@ partial class LoadDetailsForm
             ContentAlignment.MiddleLeft;
 
         // LoadDetailsForm
-        AcceptButton = btnRefresh;
         AutoScaleDimensions =
             new SizeF(7F, 15F);
         AutoScaleMode =

@@ -1,6 +1,7 @@
 ﻿using FleetFlow.Application.Abstractions.Customers;
 using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
+using FleetFlow.Application.Abstractions.Fleet;
 using FleetFlow.Application.Abstractions.Loads;
 using FleetFlow.Application.Abstractions.Persistence;
 using FleetFlow.Application.Abstractions.Security;
@@ -9,6 +10,7 @@ using FleetFlow.Infrastructure.Customers;
 using FleetFlow.Infrastructure.Dashboard;
 using FleetFlow.Infrastructure.Data;
 using FleetFlow.Infrastructure.Dispatch;
+using FleetFlow.Infrastructure.Fleet;
 using FleetFlow.Infrastructure.Loads;
 using FleetFlow.Infrastructure.Security;
 using FleetFlow.Infrastructure.Trips;
@@ -93,6 +95,20 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<
             ICustomerLookupService,
             SqlCustomerLookupService>();
+
+        // Proporciona el listado, detalle y operaciones
+        // de mantenimiento del módulo Customers.
+        services.AddSingleton<
+            ICustomerService,
+            SqlCustomerService>();
+
+        services.AddSingleton<
+            IFleetOverviewService,
+            SqlFleetOverviewService>();
+
+        services.AddSingleton<
+            IFleetCommandService,
+            SqlFleetCommandService>();
 
         return services;
     }

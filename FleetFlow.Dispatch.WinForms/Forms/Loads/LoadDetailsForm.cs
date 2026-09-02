@@ -1,4 +1,5 @@
 ﻿using FleetFlow.Application.Abstractions.Loads;
+using FleetFlow.Application.Abstractions.Customers;
 using FleetFlow.Application.Abstractions.Trips;
 using FleetFlow.Application.Loads;
 using FleetFlow.Dispatch.WinForms.Forms.Trips;
@@ -19,15 +20,32 @@ public partial class LoadDetailsForm : Form
     private readonly ITripDetailsService?
         _tripDetailsService;
 
+    private readonly ILoadCommandService?
+        _loadCommandService;
+
+    private readonly ICustomerLookupService?
+        _customerLookupService;
+
+    private readonly bool _canManageLoads;
+
+    private LoadDetails? _currentDetails;
+
     // Se asigna después de cargar los datos.
     // Puede permanecer null si la carga no tiene viaje.
     private long? _relatedTripId;
+
+    /// <summary>
+    /// Indica que la carga fue modificada desde esta ventana.
+    /// MainForm utiliza esta bandera para actualizar la lista.
+    /// </summary>
+    public bool WasUpdated { get; private set; }
 
     public LoadDetailsForm()
     {
         InitializeComponent();
 
         btnRefresh.Click += btnRefresh_Click;
+        btnEditLoad.Click += btnEditLoad_Click;
         btnOpenTrip.Click += btnOpenTrip_Click;
         btnClose.Click += btnClose_Click;
     }
@@ -38,12 +56,20 @@ public partial class LoadDetailsForm : Form
     public LoadDetailsForm(
         long loadId,
         ILoadDetailsService loadDetailsService,
-        ITripDetailsService tripDetailsService)
+        ITripDetailsService tripDetailsService,
+        ILoadCommandService loadCommandService,
+        ICustomerLookupService customerLookupService,
+        bool canManageLoads)
         : this()
     {
         _loadId = loadId;
         _loadDetailsService = loadDetailsService;
         _tripDetailsService = tripDetailsService;
+        _loadCommandService = loadCommandService;
+        _customerLookupService = customerLookupService;
+        _canManageLoads = canManageLoads;
+
+        btnEditLoad.Visible = canManageLoads;
     }
 
     protected override async void OnLoad(EventArgs e)
@@ -116,6 +142,7 @@ public partial class LoadDetailsForm : Form
     private void DisplayDetails(
         LoadDetails details)
     {
+        _currentDetails = details;
         _relatedTripId = details.TripId;
 
         Text =
@@ -192,6 +219,9 @@ public partial class LoadDetailsForm : Form
         btnOpenTrip.Enabled =
             details.TripId.HasValue;
 
+        btnEditLoad.Enabled =
+            CanEdit(details);
+
         lblMessage.ForeColor =
             Color.FromArgb(106, 116, 130);
 
@@ -203,6 +233,43 @@ public partial class LoadDetailsForm : Form
         object? sender,
         EventArgs e)
     {
+        await LoadDetailsAsync();
+    }
+
+    /// <summary>
+    /// Abre CreateLoadForm en modo edición y vuelve a consultar
+    /// la carga cuando SQL Server confirma la actualización.
+    /// </summary>
+    private async void btnEditLoad_Click(
+        object? sender,
+        EventArgs e)
+    {
+        if (_currentDetails is null ||
+            _loadCommandService is null ||
+            _customerLookupService is null)
+        {
+            MessageBox.Show(
+                "The load editing services are unavailable.",
+                "FleetFlow",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            return;
+        }
+
+        using var editLoadForm =
+            new CreateLoadForm(
+                _currentDetails,
+                _loadCommandService,
+                _customerLookupService);
+
+        if (editLoadForm.ShowDialog(this) !=
+            DialogResult.OK)
+        {
+            return;
+        }
+
+        WasUpdated = true;
         await LoadDetailsAsync();
     }
 
@@ -285,12 +352,37 @@ public partial class LoadDetailsForm : Form
     }
 
     /// <summary>
+    /// Refleja en la interfaz las mismas reglas protegidas
+    /// por operations.Load_Update.
+    /// </summary>
+    private bool CanEdit(LoadDetails details)
+    {
+        if (!_canManageLoads ||
+            details.LoadStatusCode is not
+                ("NEW" or "PLANNED"))
+        {
+            return false;
+        }
+
+        return !details.TripId.HasValue ||
+            details.TripStatusCode is
+                "PLANNED" or
+                "OFFERED" or
+                "ASSIGNED";
+    }
+
+    /// <summary>
     /// Deshabilita las acciones mientras se consulta
     /// la información en SQL Server.
     /// </summary>
     private void SetBusyState(bool isBusy)
     {
         btnRefresh.Enabled = !isBusy;
+
+        btnEditLoad.Enabled =
+            !isBusy &&
+            _currentDetails is not null &&
+            CanEdit(_currentDetails);
 
         btnOpenTrip.Enabled =
             !isBusy &&
