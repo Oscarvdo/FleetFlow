@@ -1,14 +1,20 @@
 using FleetFlow.Application.Abstractions.Customers;
 using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
+using FleetFlow.Application.Abstractions.Fleet;
 using FleetFlow.Application.Abstractions.Loads;
 using FleetFlow.Application.Abstractions.Trips;
 using FleetFlow.Application.Authentication;
+using FleetFlow.Application.Fleet;
 using FleetFlow.Dispatch.WinForms.Controls.Dashboard;
+using FleetFlow.Dispatch.WinForms.Controls.Customers;
 using FleetFlow.Dispatch.WinForms.Controls.Dispatch;
+using FleetFlow.Dispatch.WinForms.Controls.Fleet;
 using FleetFlow.Dispatch.WinForms.Controls.Loads;
 using FleetFlow.Dispatch.WinForms.Controls.Trips;
 using FleetFlow.Dispatch.WinForms.Forms.Loads;
+using FleetFlow.Dispatch.WinForms.Forms.Customers;
+using FleetFlow.Dispatch.WinForms.Forms.Fleet;
 using FleetFlow.Dispatch.WinForms.Forms.Trips;
 
 namespace FleetFlow.Dispatch.WinForms.Forms.Main;
@@ -41,6 +47,14 @@ public partial class MainForm : Form
     private readonly ICustomerLookupService?
         _customerLookupService;
 
+    private readonly ICustomerService?
+        _customerService;
+
+    private readonly IFleetOverviewService?
+        _fleetOverviewService;
+    private readonly IFleetCommandService?
+        _fleetCommandService;
+
     public MainForm()
     {
         InitializeComponent();
@@ -61,7 +75,10 @@ public partial class MainForm : Form
         ILoadListService loadListService,
         ILoadDetailsService loadDetailsService,
         ILoadCommandService loadCommandService,
-        ICustomerLookupService customerLookupService)
+        ICustomerLookupService customerLookupService,
+        ICustomerService customerService,
+        IFleetOverviewService fleetOverviewService,
+        IFleetCommandService fleetCommandService)
         : this()
     {
         _session = session;
@@ -73,6 +90,9 @@ public partial class MainForm : Form
         _loadDetailsService = loadDetailsService;
         _loadCommandService = loadCommandService;
         _customerLookupService = customerLookupService;
+        _customerService = customerService;
+        _fleetOverviewService = fleetOverviewService;
+        _fleetCommandService = fleetCommandService;
     }
 
     protected override void OnLoad(EventArgs e)
@@ -226,6 +246,18 @@ public partial class MainForm : Form
             return;
         }
 
+        if (selectedButton == btnCustomers)
+        {
+            ShowCustomers();
+            return;
+        }
+
+        if (selectedButton == btnFleet)
+        {
+            ShowFleet();
+            return;
+        }
+
         ShowPlaceholder(
             selectedButton.Text);
     }
@@ -322,7 +354,10 @@ public partial class MainForm : Form
             new LoadsControl(
                 _loadListService)
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                CanCreateLoads =
+                    _session?.HasPermission(
+                        "LOADS.MANAGE") == true
             };
 
         // El doble clic abre LoadDetailsForm.
@@ -336,6 +371,136 @@ public partial class MainForm : Form
 
         ShowContent(loadsControl);
         lblPageTitle.Text = "Loads";
+    }
+
+    private void ShowCustomers()
+    {
+        if (_customerService is null)
+        {
+            ShowPlaceholder("Customers unavailable");
+            return;
+        }
+
+        var customersControl = new CustomersControl(_customerService)
+        {
+            Dock = DockStyle.Fill,
+            CanManageCustomers =
+                _session?.HasPermission("CUSTOMERS.MANAGE") == true
+        };
+
+        customersControl.CustomerOpenRequested += OpenCustomerDetails;
+        customersControl.CustomerEditRequested += OpenEditCustomer;
+        customersControl.CustomerCreateRequested += OpenCreateCustomer;
+        ShowContent(customersControl);
+        lblPageTitle.Text = "Customers";
+    }
+
+    private void ShowFleet()
+    {
+        if (_fleetOverviewService is null)
+        {
+            ShowPlaceholder("Fleet unavailable");
+            return;
+        }
+
+        var fleetControl = new FleetControl(_fleetOverviewService)
+        {
+            Dock = DockStyle.Fill,
+            CanManageVehicles = _session?.HasPermission("FLEET.MANAGE") == true
+        };
+        fleetControl.VehicleCreateRequested += OpenCreateVehicle;
+        fleetControl.VehicleEditRequested += OpenEditVehicle;
+        ShowContent(fleetControl);
+        lblPageTitle.Text = "Fleet";
+    }
+
+    private async void OpenCreateVehicle(object? sender, EventArgs e)
+    {
+        if (_fleetCommandService is null) return;
+        using var form = new VehicleForm(_fleetCommandService);
+        if (form.ShowDialog(this) == DialogResult.OK && sender is FleetControl fleetControl)
+            await fleetControl.RefreshFleetAsync();
+    }
+
+    private async void OpenEditVehicle(FleetOverviewVehicleItem vehicle)
+    {
+        if (_fleetCommandService is null) return;
+        using var form = new VehicleForm(_fleetCommandService, vehicle);
+        if (form.ShowDialog(this) == DialogResult.OK && pnlContentHost.Controls.OfType<FleetControl>().FirstOrDefault() is FleetControl fleetControl)
+            await fleetControl.RefreshFleetAsync();
+    }
+
+    private async void OpenCreateCustomer(object? sender, EventArgs e)
+    {
+        if (_customerService is null ||
+            _session?.HasPermission("CUSTOMERS.MANAGE") != true)
+        {
+            MessageBox.Show("You do not have permission to create customers.",
+                "FleetFlow", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        using var form = new CustomerForm(_customerService);
+        if (form.ShowDialog(this) == DialogResult.OK &&
+            sender is CustomersControl customersControl)
+        {
+            await customersControl.RefreshCustomersAsync();
+        }
+    }
+
+    private async void OpenCustomerDetails(long customerId)
+    {
+        if (_customerService is null) return;
+
+        using var form = new CustomerDetailsForm(
+            customerId,
+            _customerService,
+            _session?.HasPermission("CUSTOMERS.MANAGE") == true);
+
+        form.LoadOpenRequested += OpenLoadDetails;
+        form.ShowDialog(this);
+
+        if (form.WasUpdated &&
+            pnlContentHost.Controls.OfType<CustomersControl>().FirstOrDefault()
+                is CustomersControl customersControl)
+        {
+            await customersControl.RefreshCustomersAsync();
+        }
+    }
+
+    private async void OpenEditCustomer(long customerId)
+    {
+        if (_customerService is null ||
+            _session?.HasPermission("CUSTOMERS.MANAGE") != true)
+        {
+            MessageBox.Show("You do not have permission to edit customers.",
+                "FleetFlow", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            var customer = await _customerService.GetByIdAsync(customerId);
+            if (customer is null)
+            {
+                MessageBox.Show("The selected customer no longer exists.",
+                    "FleetFlow", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using var form = new CustomerForm(_customerService, customer);
+            if (form.ShowDialog(this) == DialogResult.OK &&
+                pnlContentHost.Controls.OfType<CustomersControl>().FirstOrDefault()
+                    is CustomersControl customersControl)
+            {
+                await customersControl.RefreshCustomersAsync();
+            }
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"The customer could not be opened.\n\n{exception.Message}",
+                "FleetFlow", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     /// <summary>
@@ -391,10 +556,12 @@ public partial class MainForm : Form
     /// <summary>
     /// Abre el detalle de la carga seleccionada.
     /// </summary>
-    private void OpenLoadDetails(long loadId)
+    private async void OpenLoadDetails(long loadId)
     {
         if (_loadDetailsService is null ||
-            _tripDetailsService is null)
+            _tripDetailsService is null ||
+            _loadCommandService is null ||
+            _customerLookupService is null)
         {
             MessageBox.Show(
                 "The load details service is unavailable.",
@@ -409,9 +576,22 @@ public partial class MainForm : Form
             new LoadDetailsForm(
                 loadId,
                 _loadDetailsService,
-                _tripDetailsService);
+                _tripDetailsService,
+                _loadCommandService,
+                _customerLookupService,
+                _session?.HasPermission(
+                    "LOADS.MANAGE") == true);
 
         loadDetailsForm.ShowDialog(this);
+
+        if (loadDetailsForm.WasUpdated &&
+            pnlContentHost.Controls
+                .OfType<LoadsControl>()
+                .FirstOrDefault() is
+                    LoadsControl loadsControl)
+        {
+            await loadsControl.RefreshLoadsAsync();
+        }
     }
 
     /// <summary>

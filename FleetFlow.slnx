@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/database/">
+    <File Path="../../../Downloads/022_create_customer_location_commands.sql" />
+    <File Path="../../../Downloads/023_create_fleet_overview_api.sql" />
+    <File Path="../../../Downloads/FleetFlow-Customers-Step/020_create_customers_api.sql" />
+    <File Path="../../../Downloads/FleetFlow-Vehicles-Management-Step (1)/024_create_vehicle_commands.sql" />
     <File Path="../../../Videos/database/001_create_database.sql" />
     <File Path="../../../Videos/database/002_seed_reference_and_demo_data.sql" />
     <File Path="../../../Videos/database/003_validation_queries.sql" />

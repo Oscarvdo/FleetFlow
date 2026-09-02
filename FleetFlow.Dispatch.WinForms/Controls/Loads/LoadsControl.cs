@@ -29,6 +29,19 @@ public partial class LoadsControl : UserControl
     public event EventHandler? LoadCreateRequested;
 
     /// <summary>
+    /// Controla la visibilidad del botón New Load según
+    /// los permisos del usuario autenticado.
+    /// </summary>
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.DesignerSerializationVisibility(
+        System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public bool CanCreateLoads
+    {
+        get => btnNewLoad.Visible;
+        set => btnNewLoad.Visible = value;
+    }
+
+    /// <summary>
     /// Constructor utilizado por Visual Studio Designer.
     /// </summary>
     public LoadsControl()
@@ -445,7 +458,9 @@ public partial class LoadsControl : UserControl
     private void SetBusyState(bool isBusy)
     {
         btnRefresh.Enabled = !isBusy;
-        btnNewLoad.Enabled = !isBusy;
+        btnNewLoad.Enabled =
+            !isBusy &&
+            CanCreateLoads;
         txtSearch.Enabled = !isBusy;
         cboStatus.Enabled = !isBusy;
 
