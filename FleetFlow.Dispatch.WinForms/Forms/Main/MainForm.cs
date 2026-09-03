@@ -3,6 +3,7 @@ using FleetFlow.Application.Abstractions.Dashboard;
 using FleetFlow.Application.Abstractions.Dispatch;
 using FleetFlow.Application.Abstractions.Fleet;
 using FleetFlow.Application.Abstractions.Loads;
+using FleetFlow.Application.Abstractions.Tracking;
 using FleetFlow.Application.Abstractions.Trips;
 using FleetFlow.Application.Authentication;
 using FleetFlow.Application.Fleet;
@@ -11,6 +12,7 @@ using FleetFlow.Dispatch.WinForms.Controls.Customers;
 using FleetFlow.Dispatch.WinForms.Controls.Dispatch;
 using FleetFlow.Dispatch.WinForms.Controls.Fleet;
 using FleetFlow.Dispatch.WinForms.Controls.Loads;
+using FleetFlow.Dispatch.WinForms.Controls.Tracking;
 using FleetFlow.Dispatch.WinForms.Controls.Trips;
 using FleetFlow.Dispatch.WinForms.Forms.Loads;
 using FleetFlow.Dispatch.WinForms.Forms.Customers;
@@ -55,6 +57,12 @@ public partial class MainForm : Form
     private readonly IFleetCommandService?
         _fleetCommandService;
 
+    private readonly ILiveTrackingService?
+        _liveTrackingService;
+
+    private readonly ILiveTrackingSimulationEngine?
+        _liveTrackingSimulationEngine;
+
     public MainForm()
     {
         InitializeComponent();
@@ -78,7 +86,9 @@ public partial class MainForm : Form
         ICustomerLookupService customerLookupService,
         ICustomerService customerService,
         IFleetOverviewService fleetOverviewService,
-        IFleetCommandService fleetCommandService)
+        IFleetCommandService fleetCommandService,
+        ILiveTrackingService liveTrackingService,
+        ILiveTrackingSimulationEngine liveTrackingSimulationEngine)
         : this()
     {
         _session = session;
@@ -93,6 +103,8 @@ public partial class MainForm : Form
         _customerService = customerService;
         _fleetOverviewService = fleetOverviewService;
         _fleetCommandService = fleetCommandService;
+        _liveTrackingService = liveTrackingService;
+        _liveTrackingSimulationEngine = liveTrackingSimulationEngine;
     }
 
     protected override void OnLoad(EventArgs e)
@@ -258,6 +270,12 @@ public partial class MainForm : Form
             return;
         }
 
+        if (selectedButton == btnTracking)
+        {
+            ShowLiveTracking();
+            return;
+        }
+
         ShowPlaceholder(
             selectedButton.Text);
     }
@@ -406,12 +424,39 @@ public partial class MainForm : Form
         var fleetControl = new FleetControl(_fleetOverviewService)
         {
             Dock = DockStyle.Fill,
-            CanManageVehicles = _session?.HasPermission("FLEET.MANAGE") == true
+            CanManageVehicles = _session?.HasPermission("FLEET.MANAGE") == true,
+            CanManageTrailers = _session?.HasPermission("FLEET.MANAGE") == true
         };
         fleetControl.VehicleCreateRequested += OpenCreateVehicle;
         fleetControl.VehicleEditRequested += OpenEditVehicle;
+        fleetControl.TrailerCreateRequested += OpenCreateTrailer;
+        fleetControl.TrailerEditRequested += OpenEditTrailer;
         ShowContent(fleetControl);
         lblPageTitle.Text = "Fleet";
+    }
+
+    private void ShowLiveTracking()
+    {
+        if (_liveTrackingService is null ||
+            _liveTrackingSimulationEngine is null)
+        {
+            ShowPlaceholder("Live Tracking unavailable");
+            return;
+        }
+
+        bool canManageSimulation =
+            _session?.HasPermission("FLEET.MANAGE") == true;
+
+        var trackingControl = new LiveTrackingControl(
+            _liveTrackingService,
+            _liveTrackingSimulationEngine,
+            canManageSimulation)
+        {
+            Dock = DockStyle.Fill
+        };
+
+        ShowContent(trackingControl);
+        lblPageTitle.Text = "Live Tracking";
     }
 
     private async void OpenCreateVehicle(object? sender, EventArgs e)
@@ -426,6 +471,22 @@ public partial class MainForm : Form
     {
         if (_fleetCommandService is null) return;
         using var form = new VehicleForm(_fleetCommandService, vehicle);
+        if (form.ShowDialog(this) == DialogResult.OK && pnlContentHost.Controls.OfType<FleetControl>().FirstOrDefault() is FleetControl fleetControl)
+            await fleetControl.RefreshFleetAsync();
+    }
+
+    private async void OpenCreateTrailer(object? sender, EventArgs e)
+    {
+        if (_fleetCommandService is null) return;
+        using var form = new TrailerForm(_fleetCommandService);
+        if (form.ShowDialog(this) == DialogResult.OK && sender is FleetControl fleetControl)
+            await fleetControl.RefreshFleetAsync();
+    }
+
+    private async void OpenEditTrailer(FleetOverviewTrailerItem trailer)
+    {
+        if (_fleetCommandService is null) return;
+        using var form = new TrailerForm(_fleetCommandService, trailer);
         if (form.ShowDialog(this) == DialogResult.OK && pnlContentHost.Controls.OfType<FleetControl>().FirstOrDefault() is FleetControl fleetControl)
             await fleetControl.RefreshFleetAsync();
     }

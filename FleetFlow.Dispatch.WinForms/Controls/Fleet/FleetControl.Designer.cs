@@ -9,6 +9,8 @@ partial class FleetControl
     private Button btnRefresh = null!;
     private Button btnNewVehicle = null!;
     private Button btnEditVehicle = null!;
+    private Button btnNewTrailer = null!;
+    private Button btnEditTrailer = null!;
     private Label lblVehicles = null!;
     private Label lblVehicleCaption = null!;
     private Label lblTrailers = null!;
@@ -25,8 +27,10 @@ partial class FleetControl
         var subtitle = Label("Fleet resources, operational availability, and active assignments.", 35, 80, 10F, FontStyle.Regular, Color.FromArgb(106, 116, 130));
         lblStatus = Label("Ready", 1040, 30, 9F, FontStyle.Regular, Color.FromArgb(106, 116, 130));
         lblStatus.AutoSize = false; lblStatus.Size = new Size(280, 26); lblStatus.TextAlign = ContentAlignment.MiddleRight;
-        btnEditVehicle = new Button { Text="Edit Selected", Location=new Point(1030,72), Size=new Size(125,34), FlatStyle=FlatStyle.Flat, BackColor=Color.FromArgb(29,39,54), ForeColor=Color.White };
-        btnNewVehicle = new Button { Text="+ New Vehicle", Location=new Point(1162,72), Size=new Size(145,34), FlatStyle=FlatStyle.Flat, BackColor=Color.FromArgb(243,108,33), ForeColor=Color.White };
+        btnEditVehicle = new Button { Text="Edit Vehicle", Location=new Point(716,72), Size=new Size(125,34), FlatStyle=FlatStyle.Flat, BackColor=Color.FromArgb(29,39,54), ForeColor=Color.White };
+        btnNewVehicle = new Button { Text="+ New Vehicle", Location=new Point(848,72), Size=new Size(145,34), FlatStyle=FlatStyle.Flat, BackColor=Color.FromArgb(243,108,33), ForeColor=Color.White };
+        btnEditTrailer = new Button { Text="Edit Trailer", Location=new Point(1000,72), Size=new Size(125,34), FlatStyle=FlatStyle.Flat, BackColor=Color.FromArgb(29,39,54), ForeColor=Color.White };
+        btnNewTrailer = new Button { Text="+ New Trailer", Location=new Point(1132,72), Size=new Size(145,34), FlatStyle=FlatStyle.Flat, BackColor=Color.FromArgb(243,108,33), ForeColor=Color.White };
         var cards = new TableLayoutPanel { Location = new Point(32, 113), Size = new Size(930, 75), ColumnCount = 4 };
         for (var i = 0; i < 4; i++) cards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
         lblVehicles = Card(cards, "VEHICLES", 0); lblVehicleCaption = Label("Available vehicles", 10, 47, 8F, FontStyle.Regular, Color.FromArgb(106,116,130));
@@ -38,7 +42,7 @@ partial class FleetControl
         chkIncludeInactive = new CheckBox { Dock = DockStyle.Fill, Text = "Include inactive" };
         btnRefresh = new Button { Dock = DockStyle.Fill, FlatStyle = FlatStyle.Flat, Text = "Refresh" };
         actions.Controls.Add(txtSearch,0,0); actions.Controls.Add(chkIncludeInactive,1,0); actions.Controls.Add(btnRefresh,2,0);
-        pnlHeader.Controls.AddRange([title, subtitle, lblStatus, btnEditVehicle, btnNewVehicle, cards, actions]);
+        pnlHeader.Controls.AddRange([title, subtitle, lblStatus, btnEditVehicle, btnNewVehicle, btnEditTrailer, btnNewTrailer, cards, actions]);
         var tabs = new TabControl { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10F) };
         var vehiclePage = Page("Vehicles", out dgvVehicles); var trailerPage = Page("Trailers", out dgvTrailers); var driverPage = Page("Drivers", out dgvDrivers);
         tabs.TabPages.AddRange([vehiclePage,trailerPage,driverPage]);

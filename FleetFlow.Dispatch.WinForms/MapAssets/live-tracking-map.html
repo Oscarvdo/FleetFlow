@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>FleetFlow Live Tracking</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #eef1f5;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .leaflet-container {
+            background: #e6ebf1;
+        }
+
+        .fleetflow-truck-marker {
+            width: 42px;
+            height: 42px;
+            background: transparent;
+            border: none;
+        }
+
+        .truck-marker-body {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            transform-origin: center center;
+            transition: filter 180ms ease, opacity 180ms ease;
+        }
+
+        .truck-marker-shadow {
+            position: absolute;
+            left: 9px;
+            top: 8px;
+            width: 20px;
+            height: 25px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.22);
+            filter: blur(4px);
+            transform: translateY(4px);
+        }
+
+        .truck-marker-icon {
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 28px;
+            height: 32px;
+        }
+
+            .truck-marker-icon svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+                overflow: visible;
+            }
+
+        .truck-marker-body.offline {
+            opacity: 0.58;
+            filter: grayscale(1);
+        }
+
+        .truck-marker-body.selected {
+            filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 7px #f36c21);
+        }
+
+        .vehicle-tooltip {
+            min-width: 190px;
+            color: #2d3746;
+        }
+
+        .vehicle-tooltip-title {
+            margin-bottom: 5px;
+            color: #1d2736;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .vehicle-tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            margin-top: 3px;
+            font-size: 12px;
+        }
+
+        .vehicle-tooltip-label {
+            color: #6a7482;
+        }
+
+        .vehicle-tooltip-value {
+            color: #2d3746;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .tracking-status {
+            display: inline-block;
+            margin-top: 7px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .stop-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 25px;
+            height: 25px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            background: #1d2736;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.28);
+        }
+
+        .map-message {
+            position: absolute;
+            z-index: 1000;
+            top: 14px;
+            left: 50%;
+            min-width: 240px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            background: rgba(29, 39, 54, 0.92);
+            color: #ffffff;
+            font-size: 13px;
+            text-align: center;
+            transform: translateX(-50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 180ms ease;
+        }
+
+            .map-message.visible {
+                opacity: 1;
+            }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="mapMessage" class="map-message"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <script>
+        "use strict";
+
+        const defaultCenter = [32.2226, -110.9747];
+        const defaultZoom = 7;
+
+        const map = L.map("map", {
+            zoomControl: true,
+            attributionControl: true,
+            preferCanvas: true
+        }).setView(defaultCenter, defaultZoom);
+
+        L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+                attribution:
+                    "&copy; OpenStreetMap contributors"
+            }
+        ).addTo(map);
+
+        const vehicleMarkers = new Map();
+        const vehicleData = new Map();
+        const animationFrames = new Map();
+
+        const routeLayer = L.layerGroup().addTo(map);
+        const stopLayer = L.layerGroup().addTo(map);
+
+        let routePolyline = null;
+        let selectedVehicleId = null;
+        let fittedInitialVehicles = false;
+
+        function statusColor(status) {
+            switch ((status || "").toUpperCase()) {
+                case "MOVING":
+                    return "#238255";
+
+                case "STOPPED":
+                    return "#d8a019";
+
+                case "IDLE":
+                    return "#f36c21";
+
+                case "OFFLINE":
+                    return "#6a7482";
+
+                default:
+                    return "#2f6fed";
+            }
+        }
+
+        function normalizeHeading(value) {
+            const heading = Number(value || 0);
+            return ((heading % 360) + 360) % 360;
+        }
+
+        function truckSvg(color) {
+            return `
+                <svg
+                    viewBox="0 0 28 34"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M14 0 L20 8 L18 10 L18 14
+                           L22 14 L24 18 L24 28
+                           L20 28 L20 31
+                           L16 31 L16 28
+                           L12 28 L12 31
+                           L8 31 L8 28
+                           L4 28 L4 12
+                           Q4 8 8 8
+                           L10 8 Z"
+                        fill="${color}"
+                        stroke="#ffffff"
+                        stroke-width="1.8"
+                        stroke-linejoin="round" />
+                    <rect
+                        x="7"
+                        y="11"
+                        width="8"
+                        height="6"
+                        rx="1"
+                        fill="#dceeff" />
+                    <rect
+                        x="7"
+                        y="19"
+                        width="14"
+                        height="6"
+                        rx="1"
+                        fill="#1d2736"
+                        opacity="0.32" />
+                    <circle
+                        cx="7"
+                        cy="27"
+                        r="2.3"
+                        fill="#1d2736" />
+                    <circle
+                        cx="21"
+                        cy="27"
+                        r="2.3"
+                        fill="#1d2736" />
+                </svg>`;
+        }
+
+        function createTruckIcon(vehicle) {
+            const status =
+                (vehicle.trackingStatus || "OFFLINE")
+                    .toUpperCase();
+
+            const selected =
+                Number(vehicle.vehicleId) ===
+                Number(selectedVehicleId);
+
+            const classes = [
+                "truck-marker-body",
+                status === "OFFLINE" ? "offline" : "",
+                selected ? "selected" : ""
+            ]
+                .filter(Boolean)
+                .join(" ");
+
+            const heading =
+                normalizeHeading(vehicle.headingDegrees);
+
+            const html = `
+                <div
+                    class="${classes}"
+                    style="transform: rotate(${heading}deg)">
+                    <div class="truck-marker-shadow"></div>
+                    <div class="truck-marker-icon">
+                        ${truckSvg(statusColor(status))}
+                    </div>
+                </div>`;
+
+            return L.divIcon({
+                className: "fleetflow-truck-marker",
+                html: html,
+                iconSize: [42, 42],
+                iconAnchor: [21, 21],
+                popupAnchor: [0, -22]
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function displayValue(value, fallback = "—") {
+            if (
+                value === null ||
+                value === undefined ||
+                String(value).trim() === ""
+            ) {
+                return fallback;
+            }
+
+            return escapeHtml(value);
+        }
+
+        function tooltipHtml(vehicle) {
+            const status =
+                (vehicle.trackingStatus || "OFFLINE")
+                    .toUpperCase();
+
+            const speed =
+                vehicle.speedMph === null ||
+                vehicle.speedMph === undefined
+                    ? "—"
+                    : `${Number(vehicle.speedMph).toFixed(1)} mph`;
+
+            const fuel =
+                vehicle.fuelPercent === null ||
+                vehicle.fuelPercent === undefined
+                    ? "—"
+                    : `${Number(vehicle.fuelPercent).toFixed(1)}%`;
+
+            const progress =
+                vehicle.progressPercent === null ||
+                vehicle.progressPercent === undefined
+                    ? "0.0%"
+                    : `${Number(vehicle.progressPercent).toFixed(1)}%`;
+
+            return `
+                <div class="vehicle-tooltip">
+                    <div class="vehicle-tooltip-title">
+                        ${displayValue(vehicle.unitNumber)}
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Trip</span>
+                        <span class="vehicle-tooltip-value">
+                            ${displayValue(vehicle.tripNumber)}
+                        </span>
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Driver</span>
+                        <span class="vehicle-tooltip-value">
+                            ${displayValue(vehicle.driverName)}
+                        </span>
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Load</span>
+                        <span class="vehicle-tooltip-value">
+                            ${displayValue(vehicle.loadNumber)}
+                        </span>
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Speed</span>
+                        <span class="vehicle-tooltip-value">${speed}</span>
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Fuel</span>
+                        <span class="vehicle-tooltip-value">${fuel}</span>
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Progress</span>
+                        <span class="vehicle-tooltip-value">${progress}</span>
+                    </div>
+
+                    <div class="vehicle-tooltip-row">
+                        <span class="vehicle-tooltip-label">Next stop</span>
+                        <span class="vehicle-tooltip-value">
+                            ${displayValue(vehicle.nextStopName)}
+                        </span>
+                    </div>
+
+                    <span
+                        class="tracking-status"
+                        style="background:${statusColor(status)}">
+                        ${escapeHtml(status)}
+                    </span>
+                </div>`;
+        }
+
+        function hasPosition(vehicle) {
+            const status =
+                (vehicle.trackingStatus || "OFFLINE")
+                    .toUpperCase();
+
+            if (status === "OFFLINE") {
+                return false;
+            }
+
+            if (
+                vehicle.latitude === null ||
+                vehicle.latitude === undefined ||
+                String(vehicle.latitude).trim() === "" ||
+                vehicle.longitude === null ||
+                vehicle.longitude === undefined ||
+                String(vehicle.longitude).trim() === ""
+            ) {
+                return false;
+            }
+
+            const latitude = Number(vehicle.latitude);
+            const longitude = Number(vehicle.longitude);
+
+            return (
+                Number.isFinite(latitude) &&
+                Number.isFinite(longitude) &&
+                latitude >= -90 &&
+                latitude <= 90 &&
+                longitude >= -180 &&
+                longitude <= 180 &&
+                !(latitude === 0 && longitude === 0)
+            );
+        }
+
+        function cancelMarkerAnimation(vehicleId) {
+            const existingFrame =
+                animationFrames.get(Number(vehicleId));
+
+            if (existingFrame) {
+                cancelAnimationFrame(existingFrame);
+                animationFrames.delete(Number(vehicleId));
+            }
+        }
+
+        function animateMarker(
+            vehicleId,
+            marker,
+            destination,
+            durationMilliseconds = 850) {
+
+            cancelMarkerAnimation(vehicleId);
+
+            const origin = marker.getLatLng();
+            const startTime = performance.now();
+
+            function frame(currentTime) {
+                const elapsed = currentTime - startTime;
+
+                const progress = Math.min(
+                    1,
+                    elapsed / durationMilliseconds);
+
+                const eased =
+                    progress < 0.5
+                        ? 2 * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                const latitude =
+                    origin.lat +
+                    (destination.lat - origin.lat) * eased;
+
+                const longitude =
+                    origin.lng +
+                    (destination.lng - origin.lng) * eased;
+
+                marker.setLatLng([latitude, longitude]);
+
+                if (progress < 1) {
+                    const frameId =
+                        requestAnimationFrame(frame);
+
+                    animationFrames.set(
+                        Number(vehicleId),
+                        frameId);
+                } else {
+                    animationFrames.delete(
+                        Number(vehicleId));
+                }
+            }
+
+            const frameId = requestAnimationFrame(frame);
+
+            animationFrames.set(
+                Number(vehicleId),
+                frameId);
+        }
+
+        function updateVehicle(vehicle) {
+            const vehicleId = Number(vehicle.vehicleId);
+
+            if (!vehicleId || !hasPosition(vehicle)) {
+                return;
+            }
+
+            vehicleData.set(vehicleId, vehicle);
+
+            const destination = L.latLng(
+                Number(vehicle.latitude),
+                Number(vehicle.longitude));
+
+            let marker = vehicleMarkers.get(vehicleId);
+
+            if (!marker) {
+                marker = L.marker(destination, {
+                    icon: createTruckIcon(vehicle),
+                    riseOnHover: true,
+                    keyboard: true,
+                    title: vehicle.unitNumber || "Vehicle"
+                });
+
+                marker.bindPopup(
+                    tooltipHtml(vehicle),
+                    {
+                        maxWidth: 310,
+                        closeButton: true
+                    });
+
+                marker.on("click", function () {
+                    selectVehicle(vehicleId, false);
+
+                    if (
+                        window.chrome &&
+                        window.chrome.webview
+                    ) {
+                        window.chrome.webview.postMessage({
+                            type: "vehicle-selected",
+                            vehicleId: vehicleId
+                        });
+                    }
+                });
+
+                marker.addTo(map);
+                vehicleMarkers.set(vehicleId, marker);
+            } else {
+                marker.setIcon(createTruckIcon(vehicle));
+                marker.setPopupContent(tooltipHtml(vehicle));
+
+                animateMarker(
+                    vehicleId,
+                    marker,
+                    destination);
+            }
+        }
+
+        function setVehicles(vehicles) {
+            const incomingIds = new Set();
+            const validPositions = [];
+
+            for (const vehicle of vehicles || []) {
+                const vehicleId = Number(vehicle.vehicleId);
+
+                if (hasPosition(vehicle)) {
+                    incomingIds.add(vehicleId);
+
+                    validPositions.push([
+                        Number(vehicle.latitude),
+                        Number(vehicle.longitude)
+                    ]);
+
+                    updateVehicle(vehicle);
+                }
+            }
+
+            for (const [vehicleId, marker] of vehicleMarkers) {
+                if (!incomingIds.has(vehicleId)) {
+                    cancelMarkerAnimation(vehicleId);
+                    map.removeLayer(marker);
+                    vehicleMarkers.delete(vehicleId);
+                    vehicleData.delete(vehicleId);
+                }
+            }
+
+            if (
+                !fittedInitialVehicles &&
+                validPositions.length > 0
+            ) {
+                fittedInitialVehicles = true;
+
+                if (validPositions.length === 1) {
+                    map.setView(validPositions[0], 12);
+                } else {
+                    map.fitBounds(
+                        validPositions,
+                        {
+                            padding: [55, 55],
+                            maxZoom: 13
+                        });
+                }
+            }
+        }
+
+        function setRoute(points) {
+            routeLayer.clearLayers();
+            routePolyline = null;
+
+            const coordinates = (points || [])
+                .filter(point =>
+                    Number.isFinite(Number(point.latitude)) &&
+                    Number.isFinite(Number(point.longitude)))
+                .sort((a, b) =>
+                    Number(a.pointSequence) -
+                    Number(b.pointSequence))
+                .map(point => [
+                    Number(point.latitude),
+                    Number(point.longitude)
+                ]);
+
+            if (coordinates.length < 2) {
+                return;
+            }
+
+            routePolyline = L.polyline(
+                coordinates,
+                {
+                    color: "#2f6fed",
+                    weight: 5,
+                    opacity: 0.78,
+                    lineCap: "round",
+                    lineJoin: "round"
+                });
+
+            routePolyline.addTo(routeLayer);
+        }
+
+        function setStops(stops) {
+            stopLayer.clearLayers();
+
+            for (const stop of stops || []) {
+                const latitude = Number(stop.latitude);
+                const longitude = Number(stop.longitude);
+
+                if (
+                    !Number.isFinite(latitude) ||
+                    !Number.isFinite(longitude)
+                ) {
+                    continue;
+                }
+
+                const sequence =
+                    Number(stop.stopSequence || 0);
+
+                const icon = L.divIcon({
+                    className: "",
+                    html:
+                        `<div class="stop-marker">${sequence}</div>`,
+                    iconSize: [31, 31],
+                    iconAnchor: [15, 15],
+                    popupAnchor: [0, -16]
+                });
+
+                const marker = L.marker(
+                    [latitude, longitude],
+                    { icon: icon });
+
+                marker.bindPopup(`
+                    <div class="vehicle-tooltip">
+                        <div class="vehicle-tooltip-title">
+                            ${displayValue(stop.locationName)}
+                        </div>
+
+                        <div class="vehicle-tooltip-row">
+                            <span class="vehicle-tooltip-label">Type</span>
+                            <span class="vehicle-tooltip-value">
+                                ${displayValue(stop.stopType)}
+                            </span>
+                        </div>
+
+                        <div class="vehicle-tooltip-row">
+                            <span class="vehicle-tooltip-label">Status</span>
+                            <span class="vehicle-tooltip-value">
+                                ${displayValue(stop.stopStatus)}
+                            </span>
+                        </div>
+
+                        <div class="vehicle-tooltip-row">
+                            <span class="vehicle-tooltip-label">Address</span>
+                            <span class="vehicle-tooltip-value">
+                                ${displayValue(stop.fullAddress)}
+                            </span>
+                        </div>
+                    </div>
+                `);
+
+                marker.addTo(stopLayer);
+            }
+        }
+
+        function selectVehicle(
+            vehicleId,
+            openPopup = true) {
+
+            selectedVehicleId =
+                vehicleId === null
+                    ? null
+                    : Number(vehicleId);
+
+            for (const [id, marker] of vehicleMarkers) {
+                const vehicle = vehicleData.get(id);
+
+                if (vehicle) {
+                    marker.setIcon(
+                        createTruckIcon(vehicle));
+                }
+            }
+
+            if (selectedVehicleId === null) {
+                return;
+            }
+
+            const selectedMarker =
+                vehicleMarkers.get(selectedVehicleId);
+
+            if (!selectedMarker) {
+                return;
+            }
+
+            map.panTo(
+                selectedMarker.getLatLng(),
+                {
+                    animate: true,
+                    duration: 0.5
+                });
+
+            if (openPopup) {
+                selectedMarker.openPopup();
+            }
+        }
+
+        function fitAll() {
+            const positions = [];
+
+            for (const marker of vehicleMarkers.values()) {
+                positions.push(marker.getLatLng());
+            }
+
+            if (routePolyline) {
+                for (const coordinate of routePolyline.getLatLngs()) {
+                    positions.push(coordinate);
+                }
+            }
+
+            if (positions.length === 0) {
+                map.setView(defaultCenter, defaultZoom);
+                return;
+            }
+
+            if (positions.length === 1) {
+                map.setView(positions[0], 12);
+                return;
+            }
+
+            map.fitBounds(
+                L.latLngBounds(positions),
+                {
+                    padding: [55, 55],
+                    maxZoom: 13
+                });
+        }
+
+        function clearTracking() {
+            for (const vehicleId of vehicleMarkers.keys()) {
+                cancelMarkerAnimation(vehicleId);
+            }
+
+            vehicleMarkers.clear();
+            vehicleData.clear();
+            routeLayer.clearLayers();
+            stopLayer.clearLayers();
+            routePolyline = null;
+            selectedVehicleId = null;
+            fittedInitialVehicles = false;
+
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            map.setView(defaultCenter, defaultZoom);
+        }
+
+        function showMessage(message, duration = 2500) {
+            const element =
+                document.getElementById("mapMessage");
+
+            element.textContent = message || "";
+            element.classList.add("visible");
+
+            window.setTimeout(function () {
+                element.classList.remove("visible");
+            }, duration);
+        }
+
+        window.fleetFlowMap = {
+            setVehicles: setVehicles,
+            setRoute: setRoute,
+            setStops: setStops,
+            selectVehicle: selectVehicle,
+            fitAll: fitAll,
+            clearTracking: clearTracking,
+            showMessage: showMessage
+        };
+
+        window.addEventListener("resize", function () {
+            map.invalidateSize();
+        });
+
+        window.setTimeout(function () {
+            map.invalidateSize();
+
+            if (
+                window.chrome &&
+                window.chrome.webview
+            ) {
+                window.chrome.webview.postMessage({
+                    type: "map-ready"
+                });
+            }
+        }, 150);
+    </script>
+</body>
+</html>

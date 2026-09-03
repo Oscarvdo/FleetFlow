@@ -5,6 +5,7 @@ using FleetFlow.Application.Abstractions.Fleet;
 using FleetFlow.Application.Abstractions.Loads;
 using FleetFlow.Application.Abstractions.Persistence;
 using FleetFlow.Application.Abstractions.Security;
+using FleetFlow.Application.Abstractions.Tracking;
 using FleetFlow.Application.Abstractions.Trips;
 using FleetFlow.Infrastructure.Customers;
 using FleetFlow.Infrastructure.Dashboard;
@@ -13,6 +14,7 @@ using FleetFlow.Infrastructure.Dispatch;
 using FleetFlow.Infrastructure.Fleet;
 using FleetFlow.Infrastructure.Loads;
 using FleetFlow.Infrastructure.Security;
+using FleetFlow.Infrastructure.Tracking;
 using FleetFlow.Infrastructure.Trips;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -102,13 +104,41 @@ public static class ServiceCollectionExtensions
             ICustomerService,
             SqlCustomerService>();
 
+        // Proporciona el resumen y listado general
+        // de camiones, remolques y conductores.
         services.AddSingleton<
             IFleetOverviewService,
             SqlFleetOverviewService>();
 
+        // Ejecuta operaciones de mantenimiento
+        // sobre camiones y remolques.
         services.AddSingleton<
             IFleetCommandService,
             SqlFleetCommandService>();
+
+        // Proporciona posiciones actuales, rutas, paradas
+        // y candidatos para Live Tracking.
+        services.AddSingleton<
+            ILiveTrackingService,
+            SqlLiveTrackingService>();
+
+        // Escribe en SQL Server los lotes de telemetría
+        // producidos por los camiones simulados.
+        services.AddSingleton<
+            ILiveTrackingTelemetryWriter,
+            SqlLiveTrackingTelemetryWriter>();
+
+        // Crea y actualiza las ejecuciones
+        // de la simulación.
+        services.AddSingleton<
+            ILiveTrackingSimulationRunService,
+            SqlLiveTrackingSimulationRunService>();
+
+        // Administra las simulaciones concurrentes.
+        // Cada camión se ejecuta como una tarea independiente.
+        services.AddSingleton<
+            ILiveTrackingSimulationEngine,
+            LiveTrackingSimulationEngine>();
 
         return services;
     }
