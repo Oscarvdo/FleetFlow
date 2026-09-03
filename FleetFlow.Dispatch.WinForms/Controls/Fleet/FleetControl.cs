@@ -9,12 +9,21 @@ public partial class FleetControl : UserControl
     private FleetOverviewResult? _overview;
     public event Action<FleetOverviewVehicleItem>? VehicleEditRequested;
     public event EventHandler? VehicleCreateRequested;
+    public event Action<FleetOverviewTrailerItem>? TrailerEditRequested;
+    public event EventHandler? TrailerCreateRequested;
     [System.ComponentModel.Browsable(false)]
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public bool CanManageVehicles
     {
         get => btnNewVehicle.Visible;
         set { btnNewVehicle.Visible = value; btnEditVehicle.Visible = value; }
+    }
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public bool CanManageTrailers
+    {
+        get => btnNewTrailer.Visible;
+        set { btnNewTrailer.Visible = value; btnEditTrailer.Visible = value; }
     }
 
     public FleetControl()
@@ -24,7 +33,10 @@ public partial class FleetControl : UserControl
         btnRefresh.Click += async (_, _) => await RefreshFleetAsync();
         btnNewVehicle.Click += (_, _) => VehicleCreateRequested?.Invoke(this, EventArgs.Empty);
         btnEditVehicle.Click += (_, _) => EditVehicle();
+        btnNewTrailer.Click += (_, _) => TrailerCreateRequested?.Invoke(this, EventArgs.Empty);
+        btnEditTrailer.Click += (_, _) => EditTrailer();
         dgvVehicles.CellDoubleClick += (_, e) => { if (CanManageVehicles && e.RowIndex >= 0) EditVehicle(); };
+        dgvTrailers.CellDoubleClick += (_, e) => { if (CanManageTrailers && e.RowIndex >= 0) EditTrailer(); };
         chkIncludeInactive.CheckedChanged += async (_, _) => await RefreshFleetAsync();
         txtSearch.TextChanged += (_, _) => ApplyFilter();
     }
@@ -109,6 +121,8 @@ public partial class FleetControl : UserControl
         txtSearch.Enabled = !busy;
         btnNewVehicle.Enabled = !busy;
         btnEditVehicle.Enabled = !busy && dgvVehicles.CurrentRow is not null;
+        btnNewTrailer.Enabled = !busy;
+        btnEditTrailer.Enabled = !busy && dgvTrailers.CurrentRow is not null;
         UseWaitCursor = busy;
         if (busy) lblStatus.Text = "Loading fleet...";
     }
@@ -117,5 +131,11 @@ public partial class FleetControl : UserControl
     {
         if (dgvVehicles.CurrentRow?.DataBoundItem is FleetOverviewVehicleItem vehicle)
             VehicleEditRequested?.Invoke(vehicle);
+    }
+
+    private void EditTrailer()
+    {
+        if (dgvTrailers.CurrentRow?.DataBoundItem is FleetOverviewTrailerItem trailer)
+            TrailerEditRequested?.Invoke(trailer);
     }
 }

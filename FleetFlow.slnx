@@ -3,6 +3,7 @@
     <File Path="../../../Downloads/022_create_customer_location_commands.sql" />
     <File Path="../../../Downloads/023_create_fleet_overview_api.sql" />
     <File Path="../../../Downloads/FleetFlow-Customers-Step/020_create_customers_api.sql" />
+    <File Path="../../../Downloads/FleetFlow-Trailers-Incremental/025_create_trailer_commands.sql" />
     <File Path="../../../Downloads/FleetFlow-Vehicles-Management-Step (1)/024_create_vehicle_commands.sql" />
     <File Path="../../../Videos/database/001_create_database.sql" />
     <File Path="../../../Videos/database/002_seed_reference_and_demo_data.sql" />
@@ -17,6 +18,7 @@
     <File Path="014_create_trip_details_api.sql" />
     <File Path="015_create_trips_list_api.sql" />
     <File Path="019_create_load_update_api.sql" />
+    <File Path="026_create_live_tracking.sql" />
   </Folder>
   <Folder Name="/database/sample-data/">
     <File Path="../../../Videos/database/sample-data/customers.csv" />
